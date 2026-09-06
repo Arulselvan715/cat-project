@@ -13,6 +13,7 @@ const ERROR_TYPES = [
   'Language-related issue',
   'Ambiguous submission',
   'Human override',
+  'Ground truth not available',
 ]
 
 export default function ErrorAnalysisPage() {
@@ -150,7 +151,7 @@ export default function ErrorAnalysisPage() {
       <div className="card mb-6">
         <div className="card-header">
           <div>
-            <h3 className="card-title">8-Class Error Taxonomy Distribution</h3>
+            <h3 className="card-title">9-Class Error Taxonomy Distribution</h3>
             <p className="card-subtitle">Recommendations classified by specific failure mode to direct rule optimization</p>
           </div>
           <span className="badge-rule">Taxonomy Map</span>

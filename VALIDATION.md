@@ -1,217 +1,245 @@
-# VALIDATION.md — Formative Feedback Assistant: Experimentation & Validation Report
+﻿# VALIDATION.md — Formative Feedback Assistant: Experimentation & Validation Report
 
-> **CRITICAL SCIENTIFIC DISCLAIMER**  
-> All empirical observations, scores, and rater evaluations in this prototype are derived from **DEMO SEED DATA** curated for reproducible functional verification.  
-> **DEMO DATA**, **TARGET GOALS**, and **ACTUAL MEASURED RESULTS** are strictly distinguished throughout this report.  
-> Do **NOT** cite these prototype numbers as representative of a real-world multi-institution trial until an unseeded trial with external participants is executed.
+> **CRITICAL SCIENTIFIC & ACADEMIC DISCLAIMER**  
+> All empirical observations, scores, rater evaluations, and participant records in this prototype are derived from **DEMO SEED DATA** and **SIMULATED VALIDATION RECORDS** curated for reproducible functional verification.  
+> Important: Experimental metrics and validation observations shown in this prototype are based on seeded/demo data and simulated validation records. They demonstrate the evaluation workflow and should not be presented as results from a real-world external participant study.  
+> Do **NOT** claim that real external students or mentors participated in these trials. No external human subjects were recruited.
 
 ---
 
-## 1. Experiment Methodology
+## 1. Purpose & Overview
 
-The study evaluates the pedagogical efficacy of the **Formative Feedback Assistant** using a between-subjects experimental design comparing two conditions:
-- **Control Group (Baseline)**: Students write a draft essay and receive traditional generic delayed feedback.
-- **Treatment Group (Prototype)**: Students write a draft essay and receive immediate, explainable, rule-grounded formative feedback with quotes from their text, followed by iterative revision support.
+The validation framework for the **Formative Feedback Assistant** establishes a measurable, reproducible baseline to verify whether immediate, explainable, rule-grounded formative feedback improves student draft quality and facilitates meaningful revision compared to traditional feedback mechanisms.
 
-```
-Student Draft
-   │
-   ├── [BASELINE]  ──► Generic Delayed Comment ──► Revision ──► Measure Delta
-   │
-   └── [PROTOTYPE] ──► Rule + Evidence + Why Fired ──► Revision ──► Measure Delta
-                             │
-                             └── (High-Impact?) ──► Human Mentor Review Queue
-```
+The system evaluates:
+1. Student submission draft vs final revision quality gains.
+2. Rubric criteria coverage across drafts.
+3. Student follow-through on instructor notes.
+4. Error taxonomy and classification of failure modes.
+5. Simulated user usability, WCAG 2.1 AA accessibility, non-native language fairness, and explainability comprehension.
+
+---
+
+## 2. Validation Methodology
+
+The evaluation uses a between-subjects experimental comparison across two conditions:
+- **Control Group (Baseline)**: Students write a draft essay and receive delayed, generic end-of-assignment comments without granular rubric breakdown or extracted quotes.
+- **Treatment Group (Prototype)**: Students write a draft essay and receive immediate, explainable, rule-grounded formative feedback featuring extracted evidence quotes, rule explanations, and revision diff tracking. High-impact or low-confidence recommendations are routed to a human mentor review queue.
+
+`
+Student Draft Submission
+          │
+          ├── [BASELINE CONTROL] ──► Generic Delayed Comment ──► Revision ──► Measure Quality Delta
+          │
+          └── [PROTOTYPE TREATMENT] ──► Rule Breakdown + Evidence Quotes + Why Fired ──► Revision
+                                                  │
+                                                  └── (High-Impact?) ──► Mentor Review Queue
+`
 
 Both groups are evaluated against identical 5-criterion rubric weights:
-1. Definition (DEF): 20%
-2. Advantages (ADV): 30%
-3. Real-World Examples (EX): 30%
-4. Organization (ORG): 10%
-5. Clarity (CLR): 10%
+1. **Definition (DEF)**: 20%
+2. **Advantages (ADV)**: 30%
+3. **Real-World Examples (EX)**: 30%
+4. **Organization (ORG)**: 10%
+5. **Clarity (CLR)**: 10%
 
 ---
 
-## 2. Baseline Definition
+## 3. Baseline Condition (Control Group)
 
-* **Condition Name**: `BASELINE / DEMO EXPERIMENT`
-* **Definition**: Students receive generic, delayed comments (e.g. *"Good effort. Review the rubric to expand your definition and add examples."*) without:
-  * Specific rule citations
-  * Extracted text quotes (evidence)
-  * Rubric criterion breakdown
-  * Human-in-the-loop review routing
-* **Dataset**: 5 student observations with drafts, instructor notes, and single revisions.
-* **Calculated Baseline Metrics**:
-  * **Average Draft Score**: 48.8 / 100
-  * **Average Final Score**: 61.0 / 100
-  * **Average Improvement**: +12.2 points
-  * **Relative Improvement**: +25.0%
-  * **Rubric Coverage**: 45.0% → 62.0% (+17.0% gain)
-  * **Instructor Feedback Addressed Rate**: 60.0% (3/5 addressed)
-  * **Average Revisions**: 1.0
+* **Condition Name**: BASELINE / DEMO EXPERIMENT
+* **Definition**: Generic delayed comments (e.g. *"Good start. Please expand definition and add more examples."*) delivered after draft submission without automated rule breakdown or text quotes.
+* **Dataset Size**: 5 student observations (Student A (Control) through Student E (Control)).
+* **Measured Baseline Statistics**:
+  * **Average Draft Score**: 49.20 / 100
+  * **Average Final Score**: 61.00 / 100
+  * **Average Quality Improvement**: **+11.80 points**
+  * **Relative Improvement**: **+24.0%**
+  * **Median Improvement**: +12.00 points
+  * **Rubric Coverage (Final)**: 62.0% (initial draft was 45.0%, net change: +17.0%)
+  * **Instructor Feedback Addressed Rate**: 60.0% (3 of 5 addressed)
+  * **Average Revision Count**: 1.0 revision
 
 ---
 
-## 3. Prototype Condition
+## 4. Prototype Condition (Treatment Group)
 
-* **Condition Name**: `FORMATIVE FEEDBACK ASSISTANT (Treatment)`
-* **Definition**: Students receive immediate deterministic feedback (< 2 seconds) featuring:
-  * Identified rubric criterion & weight
-  * Human-readable rule applied + explanation
-  * Exact excerpted quote from student text (evidence)
-  * Plain-language **"WHY THIS RULE FIRED"** analysis
-  * Student revision workflow with draft vs final diff timeline
-  * High-impact decisions (plagiarism, extreme score, low confidence) routed to the **Mentor Review Queue**
-* **Dataset**: 7 representative student observations with full draft submissions, assistant feedback, revisions, and instructor notes.
-* **Calculated Prototype Metrics**:
-  * **Average Draft Score**: 47.3 / 100
-  * **Average Final Score**: 77.6 / 100
-  * **Average Improvement**: +30.3 points
-  * **Median Improvement**: +32.0 points
-  * **Relative Improvement**: +64.1%
-  * **Rubric Coverage**: 42.1% → 89.0% (+46.9% gain)
-  * **Instructor Feedback Addressed Rate**: 85.7% (6/7 addressed)
-  * **Average Revisions**: 2.0
+* **Condition Name**: FORMATIVE FEEDBACK ASSISTANT (Treatment)
+* **Definition**: Immediate deterministic feedback (<2 seconds) detailing rubric criteria, human-readable rules, extracted text quotes, plain-language "WHY THIS RULE FIRED" analyses, and revision timeline diffs. High-impact signals route to human mentors.
+* **Dataset Size**: 7 student observations (Carla Mendes, David Chen, Elan Goldberg, Hannah Park, George Osei, Ivan Petrov, Julia Martinez).
+* **Measured Prototype Statistics**:
+  * **Average Draft Score**: 45.86 / 100
+  * **Average Final Score**: 77.57 / 100
+  * **Average Quality Improvement**: **+31.71 points**
+  * **Relative Improvement**: **+69.2%**
+  * **Median Improvement**: +32.00 points
+  * **Rubric Coverage (Final)**: 89.0% (initial draft was 42.9%, net change: +46.1%)
+  * **Instructor Feedback Addressed Rate**: 85.7% (6 of 7 addressed)
+  * **Average Revision Count**: 2.0 revisions
   * **Recommendations Acted Upon**: 16 / 17 (94.1%)
-
----
-
-## 4. Dataset Description
-
-The corpus contains 22 submissions from 10 diverse simulated students across 6 categories:
-
-| Category | Count | Purpose |
-|---|---|---|
-| Strong submissions | 5 | Verify absence of false-positive penalties on excellent work |
-| Weak submissions | 5 | Verify comprehensive detection of missing rubric elements |
-| Incomplete / Short | 3 | Verify `RULE_CLR_001` handling and extreme brevity checks |
-| Non-native English | 5 | Verify grammar is isolated from conceptual evaluation |
-| Ambiguous context | 4 | Verify `RULE_EX_003` low-confidence human escalation |
-| High-impact cases | 3 | Verify plagiarism signal, extreme score human review |
 
 ---
 
 ## 5. Metrics & Calculation Formulas
 
 1. **Absolute Improvement Gain**:
-   $$\text{Improvement Points} = \text{Final Score} - \text{Draft Score}$$
+   \text{Improvement Points} = \text{Final Score} - \text{Draft Score}
 
 2. **Relative Improvement Gain**:
-   $$\text{Relative Gain (\%)} = \left(\frac{\text{Final Score} - \text{Draft Score}}{\text{Draft Score}}\right) \times 100$$
+   \text{Relative Gain (\%)} = \left(\frac{\text{Final Score} - \text{Draft Score}}{\text{Draft Score}}\right) \times 100
 
 3. **Rubric Coverage**:
-   $$\text{Coverage (\%)} = \left(\frac{\text{Number of Rubric Criteria Met}}{\text{Total Rubric Criteria (5)}}\right) \times 100$$
+   \text{Rubric Coverage (\%)} = \left(\frac{\text{Criteria Addressed}}{\text{Total Criteria (5)}}\right) \times 100
 
 4. **Instructor Feedback Addressed Rate**:
-   $$\text{Addressed Rate (\%)} = \left(\frac{\text{Instructor Suggestions Addressed in Final Revision}}{\text{Total Submissions with Instructor Notes}}\right) \times 100$$
+   \text{Addressed Rate (\%)} = \left(\frac{\text{Revisions Incorporating Instructor Feedback}}{\text{Total Observations with Instructor Feedback}}\right) \times 100
 
-5. **Human Review Percentage**:
-   $$\text{Human Sign-Off (\%)} = \left(\frac{\text{Reviews Approved + Rejected + Modified}}{\text{Total Flagged High-Impact Reviews}}\right) \times 100$$
+5. **Net Quality Improvement Over Baseline**:
+   \text{Net Point Differential} = \text{Prototype Avg Improvement} - \text{Baseline Avg Improvement} = 31.71 - 11.80 = +19.91\text{ pts}
 
----
-
-## 6. Project Targets vs. Baseline vs. Measured Results
-
-| Metric | Baseline (Measured) | Project Target (Goal) | Measured Result (Prototype) | Status |
-|---|---|---|---|---|
-| **Draft → Final Quality Improvement** | +12.2 pts (+25.0%) | ≥ +35% relative gain | **+30.3 pts (+64.1% gain)** | **Target Met** |
-| **Rubric Coverage** | 62.0% | ≥ 85% criteria addressed | **89.0% final coverage** | **Target Met** |
-| **Feedback Usefulness** | 3.1 / 5.0 (survey) | ≥ 4.0 / 5.0 (survey) | **4.9 / 5.0 (user panel)** | **Target Met** |
-| **Recommendation Accuracy** | 68.0% (heuristic) | ≥ 85% rater agreement | **75.0% (verified ground truth)** | **In Progress** |
-| **Human Review of High-Impact Decisions** | 0% (no human check) | 100% mentor sign-off | **100% (7/7 reviewed or pending in queue)** | **Target Met** |
-
-*Note on Recommendation Accuracy*: Out of 8 audited ground-truth observations, 6 were verified correct and 2 were false alerts (`RULE_HI_002` on advanced student and `RULE_ADV_001` on subtle synonym). The target of ≥85% is in progress as heuristic filters are tuned.
+6. **Relative Efficacy Lead**:
+   \text{Relative Lead (\%)} = \left(\frac{31.71 - 11.80}{11.80}\right) \times 100 = +168.7\%
 
 ---
 
-## 7. Error Analysis & Failure Taxonomy
+## 6. Baseline vs Prototype Comparison
 
-The system logs all feedback failures into an 8-type taxonomy:
-
-| Error Type | Example from Audit Log | Impact | Correction Action |
+| Dimension | Baseline (Control, n=5) | Prototype (Treatment, n=7) | Comparative Delta |
 |---|---|---|---|
-| **False positive** | `RULE_HI_002` flagged high-scoring essay as authenticity risk | Unnecessary mentor queue burden | Calibrate threshold with revision delta |
-| **False negative** | Missed colloquial synonym *"drastically cuts server bills"* | Student prompted for advantage already present | Expand keyword lexicon in `_detect_advantages` |
-| **Incorrect evidence** | Evidence snippet captured preceding period `". \n\nFor example"` | Cluttered quote box | Normalize regex sentence boundary slicing |
-| **Incorrect rule** | `RULE_DEF_001` fired on markdown header `"### Definition"` | Incorrect advice given to formatted essay | Strip markdown syntax before AST pattern matching |
-| **Low-confidence recommendation** | Ambiguous reference to *"Amazon"* without cloud context | Correctly routed to mentor queue | Mentor confirmed context and approved |
-| **Language-related issue** | Non-native verb agreement flagged by `RULE_LANG_001` | Handled correctly as informational low-priority | Conceptual score preserved (no penalty) |
-| **Ambiguous submission** | Single-block 250-word text flagged by `RULE_ORG_001` | Guided student to organize paragraphs | Clear draft-to-final improvement |
-| **Human override** | Mentor rejected plagiarism flag matching course slide phrase | Prevented unfair student accusation | Add course lecture slides to whitelist |
-
-*Missing Ground Truth Handling*: When ground-truth is absent, the system explicitly prints `"Ground truth not available for this observation."` rather than imputing a false accuracy percentage.
-
----
-
-## 8. Accessibility Validation (WCAG 2.1 AA)
-
-All 8 checklist criteria were audited and validated in the prototype:
-
-1. **Keyboard Navigation**: Pass — Focus traverses Skip-to-content, tabs, buttons, inputs, and collapsible review cards via `Tab`/`Shift+Tab` and operates via `Enter`/`Space`.
-2. **Visible Focus Indicators**: Pass — 2px solid rings (`--color-primary` #6c63ff) with 2px offset on all interactive elements.
-3. **Semantic Labels**: Pass — Semantic tags (`<header>`, `<nav>`, `<main>`, `<article>`, `<section>`, `<h1>`–`<h3>`, `role="alert"`, `role="tab"`).
-4. **Form Labels**: Pass — Every `<input>`, `<select>`, and `<textarea>` has an explicit `<label htmlFor="...">`.
-5. **Readable Text**: Pass — Contrast ratio ≥ 4.5:1 for normal text (light purple/white on dark slate `#0f1117`).
-6. **Color-Independent Status Indicators**: Pass — Status badges combine distinct text (`Approved`, `Rejected`), borders, and icons (✓, ✗, ⚠) alongside color.
-7. **Error Messages**: Pass — Real-time validation feedback rendered with `role="alert"` and clear instructional guidance.
-8. **Screen-Reader Compatibility**: Pass — Form inputs, meters, and expand/collapse triggers have descriptive `aria-label`, `aria-expanded`, and `aria-controls` bindings.
+| **Average Draft Score** | 49.20 / 100 | 45.86 / 100 | Comparable initial baseline (-3.34 pts) |
+| **Average Final Score** | 61.00 / 100 | 77.57 / 100 | **+16.57 pts higher achievement** |
+| **Average Improvement** | **+11.80 pts** | **+31.71 pts** | **+19.91 pts higher gain** |
+| **Relative Improvement** | **+24.0%** | **+69.2%** | **+168.7% relative efficacy lead** |
+| **Median Improvement** | +12.00 pts | +32.00 pts | +20.00 pts median gain |
+| **Final Rubric Coverage** | 62.0% | 89.0% | +27.0% criteria coverage lead |
+| **Rubric Coverage Growth** | +17.0% | +46.1% | +29.1% faster rubric mastery |
+| **Instructor Notes Followed** | 60.0% (3/5) | 85.7% (6/7) | +25.7% follow-through rate |
+| **Average Revisions** | 1.0 | 2.0 | +1.0 revision iteration |
 
 ---
 
-## 9. Language Diversity & Fairness Validation
+## 7. Target vs Measured Results
 
-The engine was evaluated against 4 linguistic variants:
-1. **Standard Academic English**: Score: 89.0/100, zero grammar flags.
-2. **Non-Native / Grammatically Imperfect English**: Score: 58.0/100. Despite ESL spacing and verb irregularities, advantages (scalability, cost) and examples (AWS, Google Cloud) were successfully identified. `RULE_LANG_001` fired strictly as a **low-priority informational note** without reducing conceptual criterion points.
-3. **Short / Simple English**: Score: 44.0/100. Scored lower due to brevity and missing elaboration, not penalized for linguistic sophistication.
-4. **Ambiguous Wording**: Flagged for human mentor review (`RULE_EX_003`) rather than auto-penalizing the student.
+The application dynamically computes and renders pre-specified targets against measured values:
 
----
+| Performance Benchmark | Baseline (Control) | Target Threshold | Measured Result (Prototype) | Status |
+|---|---|---|---|---|
+| **Draft → Final Quality Improvement** | +11.8 pts | ≥ +35% relative gain | **+31.71 pts (+69.2% gain)** | **Target Met** |
+| **Rubric Coverage** | 62.0% | ≥ 85% of criteria addressed | **89.0%** | **Target Met** |
+| **Feedback Usefulness** | 3.1 / 5.0 (survey) | ≥ 4.0 / 5.0 (survey) | **5.0 / 5.0 (simulated panel)** | **Target Met** |
+| **Recommendation Accuracy** | 68.0% (unassisted heuristic) | ≥ 85% rater agreement | **50.0% (4/8 verified GT)** | **In Progress** |
+| **Human Review of High-Impact Decisions** | N/A (no human check) | 100% mentor sign-off required | **25.0% (3/12 completed)** | **In Progress** |
 
-## 10. Explainability Validation
-
-A structured panel evaluated the 7 mandatory explainability questions:
-1. *What recommendation was made?* — **UNDERSTOOD** (Actionable imperative text).
-2. *What evidence caused it?* — **UNDERSTOOD** (Direct excerpted student quote).
-3. *Which rubric criterion was involved?* — **UNDERSTOOD** (Criterion name + weight clearly stated).
-4. *Which rule was applied?* — **UNDERSTOOD** (Human-readable name alongside technical rule ID).
-5. *What does the rule mean?* — **UNDERSTOOD** (Plain-English pedagogical rationale).
-6. *What is the confidence?* — **UNDERSTOOD** (Visual meter with helper text confirming it represents rule certainty, not student competence).
-7. *Why was human review required?* — **UNDERSTOOD** (High-impact banner detailing trigger: extreme score, plagiarism, or low confidence).
+*Note on In-Progress Metrics*:
+- **Recommendation Accuracy**: 4 of 8 evaluated ground-truth records were verified as fully accurate. 4 records document specific failure modes (false positive, false negative, incorrect evidence, incorrect rule) which serve as regression benchmarks for rule calibration.
+- **Human Review of High-Impact Decisions**: In the current active seeded state, 3 high-impact reviews have been finalized (Dr. Sarah Kim and demo mentor) while 9 remain in pending state awaiting mentor review in the triage queue, strictly upholding the safety rule that no high-impact item is auto-finalized.
 
 ---
 
-## 11. Representative User Testing
+## 8. 9-Class Error Taxonomy Distribution
 
-Representative testing was recorded using the in-app User Validation Form:
-* **Participants**: Simulated panel of 5 Students and 3 Mentors.
+The system logs all feedback failures and edge cases into an explicit **9-Class Error Taxonomy**:
+
+| Error Class | Example from Audit Record | Impact | Corrective Improvement Action | Ground Truth Available |
+|---|---|---|---|---|
+| **1. False positive** | RULE_HI_002 flagged strong authentic submission (score 96) | Unnecessary mentor queue burden | Cross-reference revision delta and word diversity before flagging | Yes (Incorrect) |
+| **2. False negative** | RULE_ADV_001 missed *"drastically cuts server bills"* | Student prompted for advantage already present | Expand keyword lexicon in _detect_advantages for colloquial/ESL variants | Yes (Incorrect) |
+| **3. Incorrect evidence** | Evidence snippet captured preceding period ". \n\nFor example..." | Cluttered UI quote reducing explainability | Normalize regex sentence boundary slicing in extract_evidence | Yes (Incorrect) |
+| **4. Incorrect rule** | RULE_DEF_001 fired because text had markdown header "### Concept" | Incorrect advice given to structured essay | Strip markdown header syntax before AST pattern matching | Yes (Incorrect) |
+| **5. Low-confidence recommendation** | Ambiguous reference to *"Amazon"* without cloud context (RULE_EX_003) | Correctly routed to mentor queue (confidence 0.45) | Mentor approved recommendation after inspecting cloud context | Yes (Correct) |
+| **6. Language-related issue** | RULE_LANG_001 provided non-native grammar tip | Protected learner from unfair concept point penalty | Continue strict separation between language and rubric scoring | Yes (Correct) |
+| **7. Ambiguous submission** | Single unbroken 250-word paragraph (RULE_ORG_001) | Prompted student to introduce paragraph structure | Student revised with distinct paragraphs, increasing score | Yes (Correct) |
+| **8. Human override** | Mentor rejected plagiarism flag matching course slide definition | Human-in-the-loop prevented unfair penalty | Add course lecture slides and reference syllabus to whitelist | Yes (Correct) |
+| **9. Ground truth not available** | Unverified draft pending secondary expert annotation | Accuracy metric cannot be imputed | Mark observation explicitly: "Ground truth not available for this observation." | No (Unverified) |
+
+---
+
+## 9. Ground-Truth Availability & Missing Data Handling
+
+A core design requirement is absolute data integrity:
+- **No Fabricated Evidence**: Extracted quotes are matched directly to student submission characters.
+- **Explicit Ground-Truth Status**: The error analysis API strictly differentiates records where ground-truth exists from unannotated drafts. If ground truth is missing, the system outputs: "Ground truth not available for this observation." rather than assuming 100% or 0% accuracy.
+- **Missing Metric Handling**: When experiment groups or observations lack data, the UI and API return "Insufficient measured data" rather than displaying NaN or imputed averages.
+
+---
+
+## 10. Representative User Validation (Simulated Panel)
+
+Usability was evaluated across 5 core workflows using structured Likert ratings and task evaluations:
+
+* **Panel Designation**: **Simulated Representative User Validation** (3 recorded sessions: 2 Student personas, 1 Mentor persona).
 * **Core Tasks Evaluated**:
-  1. Understand feedback: **100% success** (Mean ease: 4.8 / 5)
-  2. Find evidence: **100% success** (Mean ease: 4.6 / 5)
-  3. Understand why recommendation was generated: **100% success** (Mean ease: 4.9 / 5)
-  4. Complete a revision: **100% success** (Mean ease: 4.4 / 5)
-  5. Understand when human review is required: **100% success** (Mean ease: 5.0 / 5)
-* **Overall Usefulness**: **4.9 / 5.0**.
+  1. **Task 1 — Understand feedback**: 100% completion (Average ease: 4.33 / 5.0).
+  2. **Task 2 — Find evidence**: 100% completion (Average ease: 4.33 / 5.0).
+  3. **Task 3 — Understand why recommendation was generated**: 100% completion (Average ease: 4.67 / 5.0).
+  4. **Task 4 — Complete a revision**: 100% completion (Average ease: 4.00 / 5.0).
+  5. **Task 5 — Understand when human review is required**: 100% completion (Average ease: 4.67 / 5.0).
+* **Overall Usefulness Rating**: **5.0 / 5.0** across recorded panel reviews.
+* **Panel Qualitative Feedback**:
+  - *Student Persona*: "Knowing the exact rule gave me confidence in revising. Helpful that minor grammar mistakes did not penalize my concept score."
+  - *Mentor Persona*: "The 'WHY THIS RULE FIRED' section saves review time. High-impact queue ensures plagiarism and extreme scores are never auto-finalized."
 
 ---
 
-## 12. Automated Test Suite Results
+## 11. Accessibility Validation (WCAG 2.1 AA)
 
-The automated regression and integration suite consists of **79 tests**:
-* **65 Existing Tests**: Core engine, rubric evaluation, submissions, feedback generation, revisions, mentor review queue, and explainability fields.
-* **14 New Experiment Tests**: Baseline calculation, draft-final improvement, relative improvement, instructor feedback adherence, error taxonomy breakdown, missing ground-truth handling, user validation submission, accessibility checklist updates, explainability responses, and language fairness.
+All 8 accessibility criteria were audited and recorded in the database:
 
-```
-Total Tests: 79
-Passed: 79
-Failed: 0
-Duration: 1.86s
-```
+1. **Keyboard Navigation** (Pass): All buttons, inputs, tabs, and collapsible cards are reachable via Tab/Shift+Tab and operable via Enter/Space.
+2. **Visible Focus Indicators** (Pass): 2px solid focus rings styled with --color-primary across all interactive controls.
+3. **Semantic Labels** (Pass): Proper heading hierarchy (h1, h2, h3), ole="navigation", ole="alert", and aria-live regions.
+4. **Form Labels** (Pass): Every form input has an explicitly associated <label htmlFor="..."> element.
+5. **Readable Text** (Pass): High-contrast typography meeting WCAG 2.1 AA (≥4.5:1 ratio for normal text on dark theme).
+6. **Color-Independent Status Indicators** (Pass): Status badges combine icons (✓, ✗, ⚠), distinct text labels (Approved, Rejected, Modified), and borders alongside color.
+7. **Error Messages** (Pass): Inline error alerts with ole="alert" and descriptive instructional text.
+8. **Screen-Reader Compatibility Check** (Pass): Descriptive ria-label attributes on review actions, meters, and score pills; no silent icon-only controls.
 
 ---
 
-## 13. Limitations
+## 12. Language Diversity & Fairness Validation
 
-1. **Simulated Corpus**: The dataset consists of 22 curated submissions. While designed to span key student archetypes, it is not a statistical replacement for thousands of live learners.
-2. **Lexical Matching**: Advantage and definition detection relies on regex and keyword clusters. Future work should integrate zero-shot semantic embedding classifiers.
-3. **Instructor Feedback Extraction**: Current tracking uses exact student text citations to determine whether mentor notes were addressed. Natural language inference (NLI) models could provide deeper semantic adherence verification.
+The feedback engine was audited against 4 linguistic variants:
+1. **Standard Academic English**: Scored 89.0/100, zero grammar flags.
+2. **Non-Native / Grammatically Imperfect English** (Ivan Petrov): Scored 58.0/100 on draft. Despite ESL verb agreement and preposition irregularities, advantages and examples were recognized. RULE_LANG_001 fired strictly as an **informational low-priority recommendation** without reducing conceptual points.
+3. **Short / Simple English**: Scored 44.0/100 due to brevity and missing elaboration; evaluated solely on rubric completeness without linguistic bias.
+4. **Ambiguous Context** (George Osei): Fired RULE_EX_003 with low confidence (0.45) and routed to human mentor review rather than penalizing the student.
+
+---
+
+## 13. Explainability Validation
+
+A structured review audited the 7 mandatory explainability questions:
+1. *What recommendation was made?* — **UNDERSTOOD** (Clear actionable imperative text).
+2. *What evidence caused it?* — **UNDERSTOOD** (Direct excerpted student quote rendered in dedicated card).
+3. *Which rubric criterion was involved?* — **UNDERSTOOD** (Criterion name + weight clearly stated).
+4. *Which rule was applied?* — **UNDERSTOOD** (Human-readable rule name shown alongside technical rule ID).
+5. *What does the rule mean?* — **UNDERSTOOD** (Plain-English pedagogical explanation provided for all 13 rules).
+6. *What is the confidence?* — **UNDERSTOOD** (Percentage meter with explicit helper text explaining it measures rule certainty, not student quality).
+7. *Why was human review required?* — **UNDERSTOOD** (Prominent high-impact banner detailing trigger: extreme score, plagiarism, or low confidence).
+
+---
+
+## 14. Automated Testing Suite
+
+The system is validated by **79 automated pytest tests** covering unit engine rules, API endpoints, explainability fields, and experiment calculations:
+- ackend/tests/test_engine.py (22 tests): Edge cases (A through E), language robustness, non-fabricated evidence invariants.
+- ackend/tests/test_api.py (43 tests): Submissions, feedback, revisions, mentor reviews, override justifications, explainability fields.
+- ackend/tests/test_experiment.py (14 tests): Group stats calculation, missing data handling, relative improvements, instructor feedback adherence, error taxonomy, user validation, WCAG checklist, language fairness.
+
+**Result**: 79 passed, 0 failures, 1 warning (deprecation notice) in 5.64s.
+
+---
+
+## 15. Operational Limitations
+
+1. **Simulated Validation Panel**: The user panel consists of 3 simulated records (2 students, 1 mentor) rather than an external IRB-approved cohort.
+2. **Heuristic Keyword Lexicons**: Rule detection relies on regex and keyword clusters. Synonyms not present in the lexicon may trigger false negatives.
+3. **Single Assignment Rubric**: Built for the "Cloud Computing Essay" rubric; multi-course deployment requires creating criteria configurations for new assignments.
+4. **No Direct Production LMS Single-Sign-On**: Authentication uses persona selection dropdowns suitable for standalone demonstration.
+5. **No Production Plagiarism Verification**: RULE_PLAG_001 is a heuristic proxy (word-frequency ratio and sentence length); real deployment requires integration with an enterprise plagiarism API.
+
+---
+
+## 16. Scientific & Academic Disclaimer
+
+This report details the architectural verification of the Formative Feedback Assistant prototype. While empirical calculations reflect real data generated by the running system, all participants and submissions are synthetic seed data. No claim is made regarding statistical generalizability to diverse university-wide populations until a randomized controlled trial with human students is conducted.

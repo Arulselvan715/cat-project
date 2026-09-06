@@ -66,5 +66,5 @@ student submissions while ensuring humans remain in control of all high-impact d
 | NFR-4: Accessibility | WCAG 2.1 AA: keyboard navigation, semantic HTML, visible focus, contrast |
 | NFR-5: Language Fairness | Grammar issues separated from concept score |
 | NFR-6: Modularity | LLM can be added as additional evidence source without replacing rule layer |
-| NFR-7: Testability | All rules have automated tests; 57 tests pass |
+| NFR-7: Testability | All rules have automated tests; 79 tests pass |
 | NFR-8: Data Integrity | Seed data clearly labeled as demo; no fabricated experimental results |
