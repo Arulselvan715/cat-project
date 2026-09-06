@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { getMetrics, getReviews } from '../api/client.js'
+import KpiCard from '../components/KpiCard.jsx'
+import StatusBadge from '../components/StatusBadge.jsx'
+import EmptyState from '../components/EmptyState.jsx'
 
 export default function MentorDashboard() {
   const [metrics, setMetrics] = useState(null)
@@ -15,113 +18,228 @@ export default function MentorDashboard() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="loader"><div className="spinner" /><span>Loading mentor dashboard…</span></div>
-  if (error) return <div className="container page"><div className="error-msg" role="alert">⚠ {error}</div></div>
-
-  return (
-    <div className="container page">
-      <div className="page-header">
-        <h1>Mentor Dashboard</h1>
-        <p>Overview of all submissions, feedback metrics, and pending human-review decisions.</p>
-        <div className="demo-label mt-4" aria-label="Demo data label">
-          📊 DEMO DATA — Seed Submissions
-        </div>
+  if (loading) {
+    return (
+      <div className="loader">
+        <div className="spinner" />
+        <span>Loading mentor dashboard…</span>
       </div>
+    )
+  }
 
-      {/* Stats grid */}
-      {metrics && (
-        <section aria-labelledby="stats-heading" className="mb-8">
-          <h2 id="stats-heading" className="section-title">📈 Key Statistics</h2>
-          <div className="stats-grid">
-            <StatCard value={metrics.total_submissions} label="Total Submissions" />
-            <StatCard value={metrics.total_students} label="Enrolled Students" />
-            <StatCard value={metrics.automatic_feedback_count} label="Auto Feedback Items" />
-            <StatCard value={metrics.human_review_required_count} label="Human Review Required" color="var(--color-warn)" />
-            <StatCard value={metrics.pending_reviews} label="Pending Reviews" color="var(--color-danger)" />
-            <StatCard value={metrics.approved_reviews} label="Approved" color="var(--color-success)" />
-            <StatCard value={metrics.rejected_reviews} label="Rejected / Overridden" color="var(--color-danger)" />
-            <StatCard value={metrics.modified_reviews} label="Modified" color="var(--color-primary-light)" />
-          </div>
-        </section>
-      )}
-
-      {/* Score metrics */}
-      {metrics && (
-        <section aria-labelledby="score-heading" className="card mb-6">
-          <h2 id="score-heading" className="section-title">🎯 Score Metrics</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 'var(--space-5)' }}>
-            <MetricRow label="Avg Draft Score" value={`${metrics.avg_draft_score.toFixed(1)}/100`} />
-            <MetricRow label="Avg Final Score" value={`${metrics.avg_final_score.toFixed(1)}/100`} accent />
-            <MetricRow label="Avg Improvement" value={`+${metrics.avg_improvement.toFixed(1)} pts`} accent />
-            <MetricRow label="Relative Improvement" value={`+${metrics.relative_improvement_pct.toFixed(1)}%`} accent />
-            <MetricRow label="Rubric Coverage" value={`${metrics.rubric_coverage.toFixed(0)}%`} />
-            <MetricRow label="% High-Impact Reviewed" value={`${metrics.pct_high_impact_reviewed.toFixed(0)}%`} />
-          </div>
-        </section>
-      )}
-
-      {/* Pending reviews quick view */}
-      <section aria-labelledby="pending-heading" className="card mb-6">
-        <div className="flex items-center gap-3 mb-4" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
-          <h2 id="pending-heading" className="section-title" style={{ margin: 0 }}>⏳ Pending Reviews</h2>
-          <Link to="/mentor/reviews" className="btn btn-primary btn-sm">View All Reviews →</Link>
-        </div>
-        {pendingReviews.length === 0 ? (
-          <div className="alert alert-success">✓ No pending reviews — all high-impact decisions have been addressed.</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {pendingReviews.slice(0, 5).map(r => (
-              <div key={r.id} className="card card-sm" style={{ background: 'var(--color-surface-2)', borderLeft: '3px solid var(--color-warn)' }}>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="badge badge-pending">Pending</span>
-                  <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{r.student_name}</span>
-                  <span className="text-muted text-sm">—</span>
-                  <span className="text-sm">{r.criterion_name || 'General'}</span>
-                  <span className={`badge badge-${r.priority}`} style={{ marginLeft: 'auto' }}>{r.priority}</span>
-                </div>
-                <p className="text-sm mt-2" style={{ color: 'var(--color-text-secondary)' }}>
-                  {r.original_recommendation?.slice(0, 120)}…
-                </p>
-              </div>
-            ))}
-            {pendingReviews.length > 5 && (
-              <p className="text-sm text-muted" style={{ textAlign: 'center' }}>
-                +{pendingReviews.length - 5} more pending reviews
-              </p>
-            )}
-          </div>
-        )}
-      </section>
-
-      {/* Navigation */}
-      <div className="flex gap-4 flex-wrap">
-        <Link to="/mentor/reviews" className="btn btn-primary">🔍 Open Review Queue</Link>
-        <Link to="/mentor/metrics" className="btn btn-ghost">📊 Full Metrics Dashboard</Link>
+  if (error) {
+    return (
+      <div className="card" style={{ borderColor: 'var(--danger)', background: 'var(--danger-light)' }}>
+        <div style={{ color: 'var(--danger)', fontWeight: 600 }}>⚠️ Error loading dashboard: {error}</div>
       </div>
-    </div>
-  )
-}
+    )
+  }
 
-function StatCard({ value, label, color }) {
-  return (
-    <div className="stat-card">
-      <div className="stat-value" style={color ? { color, backgroundImage: 'none', WebkitTextFillColor: color } : {}}>
-        {value}
-      </div>
-      <div className="stat-label">{label}</div>
-    </div>
-  )
-}
-
-function MetricRow({ label, value, accent }) {
   return (
     <div>
-      <div className="stat-label">{label}</div>
-      <div style={{
-        fontSize: '1.5rem', fontWeight: 800, marginTop: 4,
-        color: accent ? 'var(--color-accent)' : 'var(--color-text-primary)',
-      }}>
-        {value}
+      {/* Header */}
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Instructor & Mentor Overview</h1>
+          <p className="page-subtitle">Oversight console for formative feedback operations, automated rule efficacy, and human-in-the-loop review queues.</p>
+        </div>
+        <div className="page-actions">
+          <Link to="/mentor/reviews" className="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <span>Review Queue ({pendingReviews.length})</span>
+          </Link>
+          <Link to="/mentor/metrics" className="btn btn-outline">
+            <span>Cohort Analytics</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Top KPI Cards */}
+      {metrics && (
+        <div className="kpi-grid mb-6">
+          <KpiCard
+            title="Total Submissions"
+            value={metrics.total_submissions}
+            subtitle={`From ${metrics.total_students} active learners`}
+            icon="📑"
+          />
+
+          <KpiCard
+            title="Pending Human Reviews"
+            value={metrics.pending_reviews}
+            badge={<StatusBadge status={metrics.pending_reviews > 0 ? 'warning' : 'success'} label={metrics.pending_reviews > 0 ? 'Needs Action' : 'All Clear'} size="sm" />}
+            subtitle="Flagged by high-impact rules"
+            icon="⚖️"
+          />
+
+          <KpiCard
+            title="Average Quality Delta"
+            value={`+${metrics.avg_improvement?.toFixed(1) || 0} pts`}
+            trend="up"
+            subtitle={`+${metrics.relative_improvement_pct?.toFixed(1) || 0}% relative growth`}
+            icon="📈"
+          />
+
+          <KpiCard
+            title="Rubric Coverage"
+            value={`${metrics.rubric_coverage?.toFixed(0) || 0}%`}
+            subtitle="Criteria actively addressed"
+            icon="🎯"
+          />
+        </div>
+      )}
+
+      {/* Quality Score Metrics Card */}
+      {metrics && (
+        <div className="card mb-6">
+          <div className="card-header">
+            <div>
+              <h3 className="card-title">Formative Assessment Outcomes</h3>
+              <p className="card-subtitle">Cohort draft vs final performance indicators</p>
+            </div>
+            <span className="status-badge status-badge-info status-badge-sm">Active Cohort</span>
+          </div>
+
+          <div className="card-body">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.5rem' }}>
+              <div style={{ padding: '1rem', background: 'var(--bg-app)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Avg Draft Score</div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.3rem' }}>
+                  {metrics.avg_draft_score?.toFixed(1) || 0} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>/ 100</span>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>Pre-feedback baseline</div>
+              </div>
+
+              <div style={{ padding: '1rem', background: 'var(--bg-app)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Avg Final Score</div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--primary)', marginTop: '0.3rem' }}>
+                  {metrics.avg_final_score?.toFixed(1) || 0} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>/ 100</span>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>Post-revision average</div>
+              </div>
+
+              <div style={{ padding: '1rem', background: 'var(--bg-app)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>High Impact Reviewed</div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--success)', marginTop: '0.3rem' }}>
+                  {metrics.pct_high_impact_reviewed?.toFixed(0) || 0}%
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>Target: 100% human oversight</div>
+              </div>
+
+              <div style={{ padding: '1rem', background: 'var(--bg-app)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Auto Feedback Issued</div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.3rem' }}>
+                  {metrics.automatic_feedback_count || 0}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>Generated recommendations</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review Queue Preview */}
+      <div className="card mb-6">
+        <div className="card-header">
+          <div>
+            <h3 className="card-title">Priority Human Review Queue</h3>
+            <p className="card-subtitle">Flagged suggestions requiring mentor intervention or override</p>
+          </div>
+          <Link to="/mentor/reviews" className="btn btn-outline btn-sm">
+            View All ({pendingReviews.length}) →
+          </Link>
+        </div>
+
+        <div className="card-body">
+          {pendingReviews.length === 0 ? (
+            <EmptyState
+              icon="✅"
+              title="Review Queue is Clear"
+              description="All high-impact automated suggestions have been reviewed and approved by instructors."
+            />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {pendingReviews.slice(0, 5).map(r => (
+                <div 
+                  key={r.id} 
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.9rem 1.1rem',
+                    background: 'var(--bg-app)',
+                    border: '1px solid var(--border-light)',
+                    borderLeft: '4px solid var(--warning)',
+                    borderRadius: 'var(--radius-md)',
+                    flexWrap: 'wrap',
+                    gap: '0.8rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
+                    <StatusBadge status="pending" label="Awaiting Decision" size="sm" />
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.9rem' }}>{r.student_name}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>•</span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{r.criterion_name || 'General'}</span>
+                    <span className="badge-rule">{r.rule_id}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span className={`status-badge status-badge-${r.priority === 'high' ? 'danger' : 'warning'} status-badge-sm`}>
+                      {r.priority}
+                    </span>
+                    <Link to="/mentor/reviews" className="btn btn-primary btn-xs" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
+                      Moderate →
+                    </Link>
+                  </div>
+                </div>
+              ))}
+
+              {pendingReviews.length > 5 && (
+                <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
+                  <Link to="/mentor/reviews" style={{ fontSize: '0.82rem', color: 'var(--primary)', fontWeight: 600 }}>
+                    + {pendingReviews.length - 5} additional submissions awaiting review in queue →
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Quick Navigation Links */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+        <Link to="/mentor/reviews" className="card card-hover" style={{ textDecoration: 'none' }}>
+          <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '1rem' }}>🔍 Review Queue Console</div>
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+            Approve, edit, or reject automated feedback with audit logging.
+          </div>
+        </Link>
+
+        <Link to="/mentor/metrics" className="card card-hover" style={{ textDecoration: 'none' }}>
+          <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '1rem' }}>📊 Analytical Metrics</div>
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+            Inspect criterion distribution, score gains, and coverage.
+          </div>
+        </Link>
+
+        <Link to="/mentor/experiment" className="card card-hover" style={{ textDecoration: 'none' }}>
+          <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '1rem' }}>🧪 A/B Experiments</div>
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+            Compare baseline vs prototype formative feedback cohorts.
+          </div>
+        </Link>
+
+        <Link to="/mentor/errors" className="card card-hover" style={{ textDecoration: 'none' }}>
+          <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '1rem' }}>🐞 Error Taxonomy</div>
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+            Rigorous classification across hallucination, false triggers, etc.
+          </div>
+        </Link>
       </div>
     </div>
   )

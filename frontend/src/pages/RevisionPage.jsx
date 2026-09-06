@@ -3,6 +3,9 @@ import { useLocation } from 'react-router-dom'
 import { getStudents, getStudentSubmissions, getRevisions, submitRevision, generateFeedback } from '../api/client.js'
 import RevisionTimeline from '../components/RevisionTimeline.jsx'
 import FeedbackCard from '../components/FeedbackCard.jsx'
+import KpiCard from '../components/KpiCard.jsx'
+import StatusBadge from '../components/StatusBadge.jsx'
+import EmptyState from '../components/EmptyState.jsx'
 
 export default function RevisionPage() {
   const location = useLocation()
@@ -43,7 +46,7 @@ export default function RevisionPage() {
 
   const handleSubmitRevision = async (e) => {
     e.preventDefault()
-    if (!revisionContent.trim()) { setError('Revision cannot be empty.'); return }
+    if (!revisionContent.trim()) { setError('Revision text cannot be empty.'); return }
     setError(null)
     setSubmitting(true)
     try {
@@ -53,7 +56,6 @@ export default function RevisionPage() {
       const fb = await generateFeedback(parseInt(selectedSub))
       setNewFeedback(fb)
       setSuccess(true)
-      // Refresh submissions to get updated scores
       const subs = await getStudentSubmissions(parseInt(selectedStudent))
       setSubmissions(subs)
     } catch (err) {
@@ -64,7 +66,6 @@ export default function RevisionPage() {
     }
   }
 
-  const latestRevision = revisions[revisions.length - 1]
   const improvement = submission?.final_score && submission?.draft_score
     ? (submission.final_score - submission.draft_score).toFixed(1)
     : null
@@ -73,27 +74,43 @@ export default function RevisionPage() {
     : null
 
   return (
-    <div className="container page">
+    <div>
+      {/* Header */}
       <div className="page-header">
-        <h1>Revision History</h1>
-        <p>Track your progress across drafts. Submit a revision and see how your score improves.</p>
+        <div>
+          <h1 className="page-title">Revision History & Progress</h1>
+          <p className="page-subtitle">Track iterative draft progression, measure score deltas, and submit updated drafts.</p>
+        </div>
       </div>
 
       {/* Selectors */}
       <div className="card mb-6">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+        <div className="grid-2-col">
           <div className="form-group">
-            <label htmlFor="rev-student" className="form-label">Student</label>
-            <select id="rev-student" className="form-control" value={selectedStudent} onChange={e => { setSelectedStudent(e.target.value); setSelectedSub(''); setRevisions([]) }}>
-              {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            <label htmlFor="rev-student" className="form-label">Active Learner</label>
+            <select
+              id="rev-student"
+              className="form-control form-select"
+              value={selectedStudent}
+              onChange={e => { setSelectedStudent(e.target.value); setSelectedSub(''); setRevisions([]) }}
+            >
+              {students.map(s => <option key={s.id} value={s.id}>{s.name} ({s.email})</option>)}
             </select>
           </div>
+
           <div className="form-group">
-            <label htmlFor="rev-submission" className="form-label">Original Submission</label>
-            <select id="rev-submission" className="form-control" value={selectedSub} onChange={e => setSelectedSub(e.target.value)}>
+            <label htmlFor="rev-submission" className="form-label">Submission Thread</label>
+            <select
+              id="rev-submission"
+              className="form-control form-select"
+              value={selectedSub}
+              onChange={e => setSelectedSub(e.target.value)}
+              disabled={submissions.length === 0}
+            >
+              {submissions.length === 0 && <option value="">No submissions recorded</option>}
               {submissions.map(s => (
                 <option key={s.id} value={s.id}>
-                  v{s.version} — {new Date(s.submitted_at).toLocaleDateString()}
+                  Submission #{s.id} (v{s.version}) — {new Date(s.submitted_at).toLocaleDateString()}
                 </option>
               ))}
             </select>
@@ -101,111 +118,171 @@ export default function RevisionPage() {
         </div>
       </div>
 
-      {/* Score Comparison */}
+      {/* Score Comparison KPI Cards */}
       {submission && (
-        <div className="card mb-6">
-          <h2 className="section-title">📈 Quality Improvement</h2>
-          <div style={{ display: 'flex', gap: 'var(--space-8)', flexWrap: 'wrap', alignItems: 'center' }}>
-            <ScoreCompare label="Draft Score" score={submission.draft_score} color="var(--color-warn)" />
-            {submission.final_score && (
-              <>
-                <div style={{ fontSize: '1.5rem', color: 'var(--color-text-muted)' }}>→</div>
-                <ScoreCompare label="Final Score" score={submission.final_score} color="var(--color-success)" />
-                <div>
-                  <div className="stat-label">Absolute Improvement</div>
-                  <div className="improvement-badge improvement-positive" style={{ fontSize: '1.2rem', marginTop: 4 }}>
-                    +{improvement} pts
-                  </div>
+        <div className="kpi-grid mb-6">
+          <KpiCard
+            title="Initial Draft Score"
+            value={submission.draft_score != null ? `${submission.draft_score.toFixed(1)}/100` : '—'}
+            subtitle="Baseline assessment"
+            icon="📝"
+          />
+
+          <KpiCard
+            title="Final Assessed Score"
+            value={submission.final_score != null ? `${submission.final_score.toFixed(1)}/100` : 'In Review'}
+            badge={<StatusBadge status={submission.is_final ? 'completed' : 'pending'} label={submission.is_final ? 'Finalized' : 'Iterating'} size="sm" />}
+            subtitle={submission.is_final ? 'Evaluation concluded' : 'Further revisions allowed'}
+            icon="🏆"
+          />
+
+          <KpiCard
+            title="Absolute Delta"
+            value={improvement != null ? `+${improvement} pts` : '—'}
+            trend={improvement != null && parseFloat(improvement) >= 0 ? 'up' : 'neutral'}
+            subtitle="Net point gain"
+            icon="📈"
+          />
+
+          <KpiCard
+            title="Relative Growth"
+            value={relativeImprovement != null ? `+${relativeImprovement}%` : '—'}
+            trend="up"
+            subtitle="Percentage quality gain"
+            icon="⚡"
+          />
+        </div>
+      )}
+
+      {/* Main Grid: Timeline on left, revision editor on right */}
+      <div style={{ display: 'grid', gridTemplateColumns: selectedSub ? '1.1fr 1fr' : '1fr', gap: '1.5rem', alignItems: 'start' }}>
+        {/* Timeline */}
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <h3 className="card-title">Progression Timeline</h3>
+              <p className="card-subtitle">Complete chronological sequence of submitted drafts</p>
+            </div>
+            <span className="badge-rule">{revisions.length + 1} Iterations</span>
+          </div>
+
+          <div className="card-body">
+            {!submission ? (
+              <EmptyState icon="⏳" title="Select a Submission" description="Choose a learner and submission above to view the timeline." />
+            ) : (
+              <RevisionTimeline submission={submission} revisions={revisions} />
+            )}
+          </div>
+        </div>
+
+        {/* Submit Revision Form */}
+        {selectedSub && (
+          <div className="card">
+            <div className="card-header">
+              <div>
+                <h3 className="card-title">Compose Revision (Iteration {revisions.length + 2})</h3>
+                <p className="card-subtitle">Address the formative suggestions and improve your score</p>
+              </div>
+              <span className="status-badge status-badge-info status-badge-sm">Formative Loop</span>
+            </div>
+
+            <div className="card-body">
+              {success && (
+                <div className="alert alert-success mb-4" role="status" aria-live="polite">
+                  ✓ Revision received and re-evaluated! Check the updated feedback below.
                 </div>
-                {relativeImprovement && (
-                  <div>
-                    <div className="stat-label">Relative Improvement</div>
-                    <div className="improvement-badge improvement-positive" style={{ fontSize: '1.2rem', marginTop: 4 }}>
-                      +{relativeImprovement}%
-                    </div>
+              )}
+
+              <form onSubmit={handleSubmitRevision} noValidate>
+                <div className="form-group mb-4">
+                  <label htmlFor="revision-textarea" className="form-label">
+                    Revised Response
+                  </label>
+                  <textarea
+                    id="revision-textarea"
+                    className="form-control"
+                    rows={12}
+                    value={revisionContent}
+                    onChange={e => setRevisionContent(e.target.value)}
+                    placeholder="Enter your refined draft here, incorporating previous feedback on definitions, advantages, and real-world examples…"
+                    aria-required="true"
+                    style={{ fontSize: '0.92rem', lineHeight: 1.6 }}
+                  />
+                  <p className="form-hint" style={{ marginTop: '0.4rem' }}>
+                    Tip: Ensure you explicitly address each feedback card generated on your previous draft.
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="error-msg mb-4" role="alert">
+                    ⚠️ {error}
                   </div>
                 )}
-              </>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-lg w-full"
+                  disabled={submitting || !revisionContent.trim()}
+                  aria-busy={submitting}
+                >
+                  {submitting ? (
+                    <>
+                      <div className="spinner" aria-hidden="true" style={{ width: '18px', height: '18px', borderWidth: '2px' }} />
+                      <span>Re-evaluating Rubric Criteria…</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      <span>Submit Revision for Assessment</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* New feedback after revision */}
+      {newFeedback && (
+        <div className="card mt-6" aria-live="polite">
+          <div className="card-header">
+            <div>
+              <h3 className="card-title">Updated Formative Feedback (v{revisions.length + 1})</h3>
+              <p className="card-subtitle">Real-time rubric evaluation of your latest revision</p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Assessed Score</div>
+              <div style={{
+                fontSize: '1.4rem',
+                fontWeight: 800,
+                color: newFeedback.score >= 70 ? 'var(--success)' : newFeedback.score >= 45 ? 'var(--warning)' : 'var(--danger)'
+              }}>
+                {newFeedback.score} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>/ 100</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="card-body">
+            {newFeedback.feedback.length === 0 ? (
+              <div className="alert alert-success">
+                🎉 Outstanding work! All rubric criteria are fully satisfied in this revision.
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.8rem' }}>
+                  Remaining feedback items ({newFeedback.feedback.length}):
+                </div>
+                {newFeedback.feedback.map(fb => (
+                  <FeedbackCard key={fb.id} item={fb} />
+                ))}
+              </div>
             )}
           </div>
         </div>
       )}
-
-      {/* Timeline */}
-      {(submission || revisions.length > 0) && (
-        <div className="card mb-6">
-          <h2 className="section-title">📅 Revision Timeline</h2>
-          <RevisionTimeline submission={submission} revisions={revisions} />
-        </div>
-      )}
-
-      {/* Submit revision form */}
-      {selectedSub && (
-        <div className="card mb-6">
-          <h2 className="section-title">✍️ Submit Revision</h2>
-          {success && (
-            <div className="alert alert-success mb-4" role="status" aria-live="polite">
-              ✓ Revision submitted! Scroll down to see updated feedback.
-            </div>
-          )}
-          <form onSubmit={handleSubmitRevision} noValidate>
-            <div className="form-group mb-4">
-              <label htmlFor="revision-textarea" className="form-label">
-                Revised Response
-                <span className="text-muted text-xs" style={{ marginLeft: 8 }}>
-                  (version {(revisions.length + 2)})
-                </span>
-              </label>
-              <textarea
-                id="revision-textarea"
-                className="form-control"
-                rows={12}
-                value={revisionContent}
-                onChange={e => setRevisionContent(e.target.value)}
-                placeholder="Paste or type your improved response here…"
-                aria-required="true"
-              />
-            </div>
-            {error && <div className="error-msg mb-4" role="alert">⚠ {error}</div>}
-            <button type="submit" className="btn btn-accent" disabled={submitting || !revisionContent.trim()} aria-busy={submitting}>
-              {submitting ? <><div className="spinner" /> Submitting…</> : '🚀 Submit Revision'}
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* New feedback after revision */}
-      {newFeedback && (
-        <div className="card" aria-live="polite">
-          <h2 className="section-title">💡 Updated Feedback (v{revisions.length + 1})</h2>
-          <div className="mb-4 flex items-center gap-3">
-            <span className="stat-label">New Score:</span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-accent)' }}>
-              {newFeedback.score}/100
-            </span>
-          </div>
-          {newFeedback.feedback.length === 0 ? (
-            <div className="alert alert-success">🎉 Excellent — no issues found in your revision!</div>
-          ) : (
-            <div className="feedback-list">
-              {newFeedback.feedback.map(fb => <FeedbackCard key={fb.id} item={fb} />)}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function ScoreCompare({ label, score, color }) {
-  if (!score) return null
-  return (
-    <div>
-      <div className="stat-label">{label}</div>
-      <div style={{ fontSize: '2.2rem', fontWeight: 800, color, lineHeight: 1 }}>
-        {score.toFixed(1)}
-        <span style={{ fontSize: '0.9rem', fontWeight: 400, color: 'var(--color-text-muted)' }}>/100</span>
-      </div>
     </div>
   )
 }

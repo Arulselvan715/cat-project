@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getReviews, actionReview } from '../api/client.js'
+import StatusBadge from '../components/StatusBadge.jsx'
+import EmptyState from '../components/EmptyState.jsx'
 
 /* ═══════════════════════════════════════════════════════════════════════════
    RULE REGISTRY
    Every rule gets: name, explanation, generateWhyFired(), mentorCheck.
-   generateWhyFired(evidence, submissionContent) returns a plain-language
-   sentence explaining why the specific submission triggered this rule.
-   Keep rule IDs — they are useful for technical auditing.
+   Keeps all explainability and rule ID fidelity intact.
 ═══════════════════════════════════════════════════════════════════════════ */
 
 const RULE_REGISTRY = {
@@ -169,7 +169,6 @@ const RULE_REGISTRY = {
   },
 }
 
-/* Helper: look up a rule or return a safe fallback */
 function getRule(ruleId) {
   return (
     RULE_REGISTRY[ruleId] || {
@@ -181,39 +180,22 @@ function getRule(ruleId) {
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   HIGH-IMPACT REASON → human-readable label + category
-═══════════════════════════════════════════════════════════════════════════ */
 function parseHighImpactReason(reason) {
   if (!reason) return null
   const r = reason.toLowerCase()
   if (r.includes('plagiarism') || r.includes('copy'))
-    return { label: 'Possible Plagiarism', icon: '🔎', color: 'var(--color-danger)' }
+    return { label: 'Possible Plagiarism', icon: '🔎', color: 'var(--danger)' }
   if (r.includes('very low') || r.includes('low performance') || r.includes('low score'))
-    return { label: 'Extremely Low Score', icon: '⬇', color: 'var(--color-danger)' }
+    return { label: 'Extremely Low Score', icon: '⬇', color: 'var(--danger)' }
   if (r.includes('exceptionally high') || r.includes('high score') || r.includes('authenticity'))
-    return { label: 'Exceptionally High Score', icon: '⬆', color: 'var(--color-warn)' }
+    return { label: 'Exceptionally High Score', icon: '⬆', color: 'var(--warning-dark)' }
   if (r.includes('low confidence') || r.includes('ambiguous') || r.includes('confidence'))
-    return { label: 'Low Confidence', icon: '❓', color: 'var(--color-warn)' }
+    return { label: 'Low Confidence', icon: '❓', color: 'var(--warning)' }
   if (r.includes('insufficient evidence') || r.includes('too short'))
-    return { label: 'Insufficient Evidence', icon: '📏', color: 'var(--color-warn)' }
-  return { label: 'Human Review Required', icon: '👤', color: 'var(--color-warn)' }
+    return { label: 'Insufficient Evidence', icon: '📏', color: 'var(--warning)' }
+  return { label: 'Human Review Required', icon: '👤', color: 'var(--warning)' }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Score colour helper
-═══════════════════════════════════════════════════════════════════════════ */
-function scoreColor(score) {
-  if (score == null) return 'var(--color-text-muted)'
-  if (score >= 70) return 'var(--color-success)'
-  if (score >= 45) return 'var(--color-warn)'
-  return 'var(--color-danger)'
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Sub-component: Rule Panel
-   Shows: [Rule ID] — [Name], Explanation, WHY THIS RULE FIRED, MENTOR CHECK
-═══════════════════════════════════════════════════════════════════════════ */
 function RulePanel({ ruleId, evidence, submissionContent, submissionScore }) {
   if (!ruleId) return null
   const rule = getRule(ruleId)
@@ -221,90 +203,71 @@ function RulePanel({ ruleId, evidence, submissionContent, submissionScore }) {
 
   return (
     <div style={{
-      background: 'var(--color-surface-2)',
-      border: '1px solid var(--color-border)',
+      background: 'var(--bg-app)',
+      border: '1px solid var(--border-light)',
       borderRadius: 'var(--radius-md)',
       overflow: 'hidden',
     }}>
-      {/* ── Rule name header ── */}
       <div style={{
-        background: 'rgba(108,99,255,0.10)',
-        borderBottom: '1px solid var(--color-border)',
-        padding: 'var(--space-3) var(--space-4)',
+        background: 'rgba(79, 70, 229, 0.06)',
+        borderBottom: '1px solid var(--border-light)',
+        padding: '0.65rem 1rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '0.5rem'
       }}>
-        <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-muted)', marginBottom: 4 }}>
-          RULE APPLIED
-        </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-          <code style={{
-            fontSize: '0.8rem', fontFamily: 'var(--font-mono)',
-            color: 'var(--color-primary-light)',
-            background: 'rgba(108,99,255,0.12)',
-            padding: '2px 8px', borderRadius: 4,
-          }}>
-            {ruleId}
-          </code>
-          <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>
-            — {rule.name}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <span className="badge-rule">{ruleId}</span>
+          <span style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+            {rule.name}
           </span>
         </div>
+        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+          Rule Logic
+        </span>
       </div>
 
-      <div style={{ padding: 'var(--space-4)' }}>
-        {/* Rule explanation */}
-        <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', lineHeight: 1.65, marginBottom: 'var(--space-4)' }}>
+      <div style={{ padding: '0.9rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
           {rule.explanation}
         </p>
 
         {/* WHY THIS RULE FIRED */}
-        <section aria-label="Why this rule fired">
-          <div style={{
-            fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase',
-            letterSpacing: '0.08em', color: 'var(--color-accent)', marginBottom: 6,
-          }}>
-            WHY THIS RULE FIRED
+        <div style={{
+          background: 'rgba(79, 70, 229, 0.04)',
+          border: '1px solid rgba(79, 70, 229, 0.15)',
+          borderRadius: 'var(--radius-sm)',
+          padding: '0.65rem 0.85rem',
+        }}>
+          <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary)', marginBottom: '0.2rem' }}>
+            Why This Rule Fired
           </div>
-          <div style={{
-            background: 'rgba(0,212,170,0.06)',
-            border: '1px solid rgba(0,212,170,0.18)',
-            borderRadius: 'var(--radius-sm)',
-            padding: 'var(--space-3) var(--space-4)',
-            fontSize: '0.84rem',
-            color: 'var(--color-text-secondary)',
-            lineHeight: 1.65,
-          }}>
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             {whyFired}
           </div>
-        </section>
+        </div>
 
         {/* WHAT THE MENTOR SHOULD CHECK */}
-        <section aria-label="What the mentor should check" style={{ marginTop: 'var(--space-4)' }}>
-          <div style={{
-            fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase',
-            letterSpacing: '0.08em', color: 'var(--color-warn)', marginBottom: 6,
-          }}>
-            WHAT THE MENTOR SHOULD CHECK
+        <div style={{
+          background: 'var(--warning-light)',
+          border: '1px solid rgba(245, 158, 11, 0.25)',
+          borderRadius: 'var(--radius-sm)',
+          padding: '0.65rem 0.85rem',
+        }}>
+          <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--warning-dark)', marginBottom: '0.2rem' }}>
+            What the Mentor Should Verify
           </div>
-          <div style={{
-            background: 'var(--color-warn-bg)',
-            border: '1px solid rgba(245,166,35,0.25)',
-            borderRadius: 'var(--radius-sm)',
-            padding: 'var(--space-3) var(--space-4)',
-            fontSize: '0.84rem',
-            color: 'var(--color-warn-light)',
-            lineHeight: 1.65,
-          }}>
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
             {rule.mentorCheck}
           </div>
-        </section>
+        </div>
       </div>
     </div>
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Main component
-═══════════════════════════════════════════════════════════════════════════ */
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState([])
   const [filter, setFilter] = useState('pending')
@@ -330,7 +293,7 @@ export default function ReviewsPage() {
     const state = actionState[reviewId] || {}
     if ((status === 'rejected' || status === 'modified') && !state.reason) {
       setActionState(prev => ({
-        ...prev, [reviewId]: { ...state, error: 'Override reason is required when rejecting or modifying.' },
+        ...prev, [reviewId]: { ...state, error: 'Override reason is required when rejecting or modifying recommendations.' },
       }))
       return
     }
@@ -358,48 +321,48 @@ export default function ReviewsPage() {
     setActionState(prev => ({ ...prev, [reviewId]: { ...(prev[reviewId] || {}), [field]: value } }))
 
   const FILTERS = [
-    { label: 'Pending',  value: 'pending'  },
-    { label: 'Approved', value: 'approved' },
-    { label: 'Rejected', value: 'rejected' },
-    { label: 'Modified', value: 'modified' },
-    { label: 'All',      value: ''         },
+    { label: 'Pending Review',  value: 'pending'  },
+    { label: 'Approved',        value: 'approved' },
+    { label: 'Rejected',        value: 'rejected' },
+    { label: 'Modified',        value: 'modified' },
+    { label: 'All Records',     value: ''         },
   ]
 
   return (
-    <div className="container page">
-
-      {/* ── Page header ── */}
+    <div>
+      {/* Page Header */}
       <div className="page-header">
-        <h1>Mentor Review Queue</h1>
-        <p>
-          High-impact feedback decisions are never finalised automatically. For each flagged
-          item, read the student's full submission, understand why the rule fired, then
-          Approve, Modify, or Reject with a documented reason.
-        </p>
-      </div>
-
-      {/* ── Human oversight policy ── */}
-      <div className="alert alert-warn mb-6" role="note">
-        <span aria-hidden="true">⚖️</span>
         <div>
-          <strong>Human Oversight Policy</strong>
-          <p style={{ marginTop: 4 }}>
-            Recommendations flagged for human review (possible plagiarism, very low/high scores,
-            low-confidence rules) are <em>never</em> acted on automatically. Rejecting or
-            modifying a recommendation requires a written override reason permanently recorded
-            in the audit log.
+          <h1 className="page-title">Mentor Review Queue & Moderation</h1>
+          <p className="page-subtitle">
+            High-impact recommendations require explicit human sign-off. Review full student submissions, audit rule triggers, and record decision overrides.
           </p>
         </div>
       </div>
 
-      {/* ── Status filter tabs ── */}
-      <div role="group" aria-label="Filter reviews by status" className="flex gap-2 flex-wrap mb-6">
+      {/* Human Oversight Policy Banner */}
+      <div className="card mb-6" style={{ background: '#fffbeb', borderColor: '#fde68a' }}>
+        <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'flex-start' }}>
+          <span style={{ fontSize: '1.4rem' }}>⚖️</span>
+          <div>
+            <div style={{ fontWeight: 700, color: '#92400e', fontSize: '0.92rem' }}>
+              Human-in-the-Loop Oversight Policy
+            </div>
+            <p style={{ fontSize: '0.85rem', color: '#b45309', marginTop: '0.2rem', lineHeight: 1.55 }}>
+              Decisions flagged as high impact (possible plagiarism, extreme scores, or low pattern confidence) are never dispatched automatically. Rejections and modifications require a mandatory written justification recorded in the immutable audit trail.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="filter-tabs mb-6" role="tablist" aria-label="Review status filters">
         {FILTERS.map(f => (
           <button
             key={f.value}
+            type="button"
+            className={`filter-tab ${filter === f.value ? 'active' : ''}`}
             onClick={() => setFilter(f.value)}
-            className={`btn btn-sm ${filter === f.value ? 'btn-primary' : 'btn-ghost'}`}
-            aria-pressed={filter === f.value}
           >
             {f.label}
           </button>
@@ -408,16 +371,26 @@ export default function ReviewsPage() {
 
       {loading && (
         <div className="loader">
-          <div className="spinner" aria-hidden="true" />
-          <span>Loading reviews…</span>
+          <div className="spinner" />
+          <span>Loading queue entries…</span>
         </div>
       )}
-      {error && <div className="error-msg" role="alert">⚠ {error}</div>}
-      {!loading && !error && reviews.length === 0 && (
-        <div className="alert alert-success">No reviews found for this filter.</div>
+
+      {error && (
+        <div className="error-msg mb-6" role="alert">
+          ⚠️ {error}
+        </div>
       )}
 
-      {/* ── Review cards ── */}
+      {!loading && !error && reviews.length === 0 && (
+        <EmptyState
+          icon="✅"
+          title="No Reviews Found"
+          description={`There are currently no reviews matching the '${filter || 'all'}' status.`}
+        />
+      )}
+
+      {/* Review Cards */}
       {!loading && reviews.map(review => {
         const state = actionState[review.id] || {}
         const isPending = review.status === 'pending'
@@ -425,314 +398,268 @@ export default function ReviewsPage() {
         const isSubExpanded = expandedSubs[review.id]
 
         return (
-          <article
-            key={review.id}
-            className="card mb-6"
-            aria-labelledby={`review-${review.id}-title`}
-            style={{ borderLeft: hiInfo ? `4px solid ${hiInfo.color}` : undefined }}
+          <div 
+            key={review.id} 
+            className="card mb-6" 
+            style={{ borderLeft: hiInfo ? `5px solid ${hiInfo.color}` : '1px solid var(--border-light)' }}
           >
-
-            {/* ── 1. Card header ── */}
-            <div className="flex items-center gap-3 flex-wrap mb-5"
-              style={{ justifyContent: 'space-between' }}>
-              <div className="flex items-center gap-3 flex-wrap">
-                <span id={`review-${review.id}-title`}
-                  style={{ fontWeight: 700, fontSize: '1rem' }}>
-                  {review.student_name || 'Unknown Student'}
+            {/* 1. Header */}
+            <div className="card-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <div className="user-avatar-sm" style={{ width: '28px', height: '28px', fontSize: '0.75rem' }}>
+                  {review.student_name ? review.student_name.charAt(0) : 'S'}
+                </div>
+                <span style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)' }}>
+                  {review.student_name || 'Unknown Learner'}
                 </span>
-                <span className="text-muted">·</span>
-                <span className="text-sm">{review.assignment_title}</span>
-                <span className={`badge badge-${review.status}`}>{review.status}</span>
+                <span style={{ color: 'var(--text-muted)' }}>•</span>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{review.assignment_title}</span>
+                <StatusBadge status={review.status} size="sm" />
                 {review.priority && (
-                  <span className={`badge badge-${review.priority}`}>{review.priority}</span>
+                  <span className={`status-badge status-badge-${review.priority === 'high' ? 'danger' : 'warning'} status-badge-sm`}>
+                    {review.priority}
+                  </span>
                 )}
               </div>
-              <span className="text-xs text-mono" style={{ color: 'var(--color-text-muted)' }}>
-                Review #{review.id}
-              </span>
+              <span className="badge-rule">Review #{review.id}</span>
             </div>
 
-            {/* ── 2. HIGH IMPACT banner ── */}
-            {hiInfo && (
-              <div
-                role="alert"
-                aria-label="High-impact review required"
-                className="mb-5"
-                style={{
-                  background: `${hiInfo.color}15`,
-                  border: `1.5px solid ${hiInfo.color}`,
-                  borderRadius: 'var(--radius-md)',
-                  padding: 'var(--space-4) var(--space-5)',
-                }}
-              >
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
-                  fontWeight: 800, fontSize: '0.9rem', color: hiInfo.color,
-                  marginBottom: 'var(--space-2)',
-                }}>
-                  <span aria-hidden="true" style={{ fontSize: '1.1rem' }}>{hiInfo.icon}</span>
-                  HIGH IMPACT — HUMAN REVIEW REQUIRED
-                </div>
-                <div style={{ fontSize: '0.85rem', color: hiInfo.color, opacity: 0.9 }}>
-                  <strong>Trigger category:</strong> {hiInfo.label}
-                </div>
-                {review.high_impact_reason && (
-                  <div style={{
-                    marginTop: 'var(--space-2)', fontSize: '0.82rem',
-                    color: 'var(--color-text-secondary)',
-                    background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-sm)',
-                    padding: 'var(--space-2) var(--space-3)',
-                  }}>
-                    <strong>Reason recorded by the system:</strong>
-                    <div style={{ marginTop: 4, fontStyle: 'italic' }}>{review.high_impact_reason}</div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── 3. STUDENT SUBMISSION (full text) ── */}
-            <div className="mb-5">
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                marginBottom: 'var(--space-2)',
-              }}>
-                <div className="feedback-meta-label" style={{ fontSize: '0.75rem' }}>
-                  STUDENT SUBMISSION
-                  {review.submission_score != null && (
-                    <span style={{
-                      marginLeft: 12, fontWeight: 800,
-                      color: scoreColor(review.submission_score),
-                    }}>
-                      Draft Score: {review.submission_score.toFixed(1)}/100
-                    </span>
-                  )}
-                </div>
-                <button
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => toggleSub(review.id)}
-                  aria-expanded={isSubExpanded}
-                  aria-controls={`sub-text-${review.id}`}
+            <div className="card-body">
+              {/* 2. High Impact Alert Banner */}
+              {hiInfo && (
+                <div 
+                  className="human-review-banner mb-5"
+                  role="alert"
+                  style={{ background: '#fef2f2', borderColor: '#fca5a5' }}
                 >
-                  {isSubExpanded ? '▲ Collapse' : '▼ Show full submission'}
-                </button>
-              </div>
-              <div
-                id={`sub-text-${review.id}`}
-                style={{
-                  background: 'var(--color-surface-2)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: 'var(--space-4)',
-                  fontSize: '0.85rem', lineHeight: 1.75,
-                  color: 'var(--color-text-secondary)',
-                  whiteSpace: 'pre-wrap',
-                  maxHeight: isSubExpanded ? 'none' : '110px',
-                  overflow: 'hidden', position: 'relative',
-                }}
-                aria-label={`Full submission by ${review.student_name}`}
-              >
-                {review.submission_content || '(no submission text available)'}
-                {!isSubExpanded && review.submission_content &&
-                  review.submission_content.length > 300 && (
-                    <div style={{
-                      position: 'absolute', bottom: 0, left: 0, right: 0, height: 48,
-                      background: 'linear-gradient(transparent, var(--color-surface-2))',
-                      pointerEvents: 'none',
-                    }} aria-hidden="true" />
-                  )}
-              </div>
-            </div>
-
-            {/* ── 4. Recommendation ── */}
-            <div className="feedback-meta-item mb-5" style={{ background: 'var(--color-surface-2)', borderRadius: 'var(--radius-md)', padding: 'var(--space-4)' }}>
-              <div className="feedback-meta-label">RECOMMENDATION FROM SYSTEM</div>
-              <p style={{ fontSize: '0.875rem', lineHeight: 1.65, color: 'var(--color-text-primary)', marginTop: 6 }}>
-                {review.original_recommendation}
-              </p>
-            </div>
-
-            {/* ── 5. EVIDENCE FROM SUBMISSION (separate, clearly labelled) ── */}
-            <div className="mb-5">
-              <div className="feedback-meta-label mb-2">EVIDENCE FROM SUBMISSION</div>
-              <p className="text-xs text-muted" style={{ marginBottom: 8 }}>
-                The specific passage that triggered this recommendation. Shown separately from
-                the full submission so you can see exactly what the system analysed.
-              </p>
-              {review.evidence ? (
-                <div className="evidence-text" aria-label={`Evidence: ${review.evidence}`}>
-                  "{review.evidence}"
-                </div>
-              ) : (
-                <div style={{
-                  fontSize: '0.82rem', color: 'var(--color-text-muted)',
-                  fontStyle: 'italic', padding: 'var(--space-2)',
-                }}>
-                  No specific passage — this rule applies to the overall submission structure.
-                </div>
-              )}
-            </div>
-
-            {/* ── 6. RULE PANEL (replaces the old rule ID + description) ── */}
-            <div className="mb-5">
-              <RulePanel
-                ruleId={review.rule_id}
-                evidence={review.evidence}
-                submissionContent={review.submission_content}
-                submissionScore={review.submission_score}
-              />
-            </div>
-
-            {/* ── 7. RULE CONFIDENCE + helper text ── */}
-            <div className="feedback-meta-item mb-5" style={{ background: 'var(--color-surface-2)', borderRadius: 'var(--radius-md)', padding: 'var(--space-4)' }}>
-              <div className="feedback-meta-label">RULE CONFIDENCE</div>
-              {review.confidence != null ? (
-                <>
-                  <div style={{
-                    fontSize: '1.3rem', fontWeight: 800, marginTop: 4,
-                    color: review.confidence < 0.5 ? 'var(--color-warn)' : 'var(--color-text-primary)',
-                  }}>
-                    {(review.confidence * 100).toFixed(0)}%
-                  </div>
-                  <div
-                    className="confidence-bar mt-2"
-                    role="meter"
-                    aria-valuenow={Math.round(review.confidence * 100)}
-                    aria-valuemin={0} aria-valuemax={100}
-                    aria-label={`Rule confidence: ${Math.round(review.confidence * 100)}%`}
-                  >
-                    <div className="confidence-fill"
-                      style={{ width: `${review.confidence * 100}%` }} />
-                  </div>
-                </>
-              ) : (
-                <div className="text-muted text-sm mt-2">—</div>
-              )}
-              <p className="text-xs text-muted mt-2" style={{ lineHeight: 1.5 }}>
-                Rule confidence indicates how certain the system is that this rule applies.
-                It does <strong>not</strong> represent the student's quality or score.
-              </p>
-              {review.confidence != null && review.confidence < 0.5 && (
-                <div style={{ marginTop: 8, fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-warn)' }}>
-                  ⚠ Low confidence — your judgement as a mentor is especially important here.
-                </div>
-              )}
-            </div>
-
-            {/* ── 8. Rubric criterion ── */}
-            <div className="feedback-meta-item mb-5" style={{ background: 'var(--color-surface-2)', borderRadius: 'var(--radius-md)', padding: 'var(--space-4)' }}>
-              <div className="feedback-meta-label">RUBRIC CRITERION</div>
-              <div style={{ fontSize: '0.875rem', marginTop: 4 }}>
-                {review.criterion_name || '—'}
-              </div>
-            </div>
-
-            {/* ── 9. Final decision (if already actioned) ── */}
-            {!isPending && (
-              <div className="mb-4">
-                <div className="feedback-meta-label">FINAL DECISION</div>
-                <div className={`alert ${
-                  review.status === 'approved' ? 'alert-success' :
-                  review.status === 'rejected' ? 'alert-warn' : 'alert-info'} mt-2`}>
-                  {review.final_decision || '(no decision note)'}
-                </div>
-                {review.override_reason && (
-                  <div className="mt-3">
-                    <div className="feedback-meta-label">OVERRIDE REASON (AUDIT LOG)</div>
-                    <div className="text-sm mt-1"
-                      style={{ color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-                      {review.override_reason}
+                  <span style={{ fontSize: '1.3rem' }}>{hiInfo.icon}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#991b1b' }}>
+                      HIGH IMPACT — HUMAN REVIEW REQUIRED
                     </div>
+                    <div style={{ fontSize: '0.82rem', color: '#b91c1c', marginTop: '0.15rem' }}>
+                      <strong>Trigger Category:</strong> {hiInfo.label}
+                    </div>
+                    {review.high_impact_reason && (
+                      <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: '#7f1d1d', background: 'rgba(255,255,255,0.7)', padding: '0.4rem 0.6rem', borderRadius: '4px' }}>
+                        <strong>Diagnostic Detail:</strong> {review.high_impact_reason}
+                      </div>
+                    )}
                   </div>
-                )}
-                {review.reviewer && (
-                  <div className="text-xs text-muted mt-3">
-                    Reviewed by <strong>{review.reviewer}</strong>
-                    {review.reviewed_at
-                      ? ` · ${new Date(review.reviewed_at).toLocaleString()}` : ''}
-                  </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
 
-            {/* ── 10. Action panel (pending only) ── */}
-            {isPending && (
-              <div style={{
-                borderTop: '1px solid var(--color-border)',
-                paddingTop: 'var(--space-5)',
-                marginTop: 'var(--space-2)',
-              }}>
-                <div className="form-group mb-3">
-                  <label htmlFor={`reason-${review.id}`} className="form-label">
-                    Override Reason
-                    <span className="text-muted text-xs" style={{ marginLeft: 8 }}>
-                      (required when rejecting or modifying)
-                    </span>
-                  </label>
-                  <textarea
-                    id={`reason-${review.id}`}
-                    className="form-control"
-                    rows={2}
-                    value={state.reason || ''}
-                    onChange={e => updateAction(review.id, 'reason', e.target.value)}
-                    placeholder="Explain why you are overriding this recommendation…"
-                    aria-describedby={`reason-hint-${review.id}`}
-                  />
-                  <p id={`reason-hint-${review.id}`} className="form-hint">
-                    Permanently logged in the audit trail for accountability.
+              {/* 3. Student Submission (Full Context) */}
+              <div className="mb-5">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
+                    Complete Student Submission
+                    {review.submission_score != null && (
+                      <span style={{ marginLeft: '0.75rem', color: review.submission_score >= 70 ? 'var(--success)' : 'var(--danger)', fontWeight: 700 }}>
+                        Score: {review.submission_score.toFixed(1)}/100
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-xs"
+                    onClick={() => toggleSub(review.id)}
+                    aria-expanded={isSubExpanded}
+                    style={{ fontSize: '0.72rem', padding: '2px 6px' }}
+                  >
+                    {isSubExpanded ? '▲ Collapse' : '▼ Expand Full Draft'}
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    background: 'var(--bg-app)',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '0.9rem 1.1rem',
+                    fontSize: '0.86rem',
+                    lineHeight: 1.65,
+                    color: 'var(--text-secondary)',
+                    whiteSpace: 'pre-wrap',
+                    maxHeight: isSubExpanded ? 'none' : '100px',
+                    overflow: 'hidden',
+                    position: 'relative',
+                  }}
+                >
+                  {review.submission_content || '(no submission text available)'}
+                  {!isSubExpanded && review.submission_content && review.submission_content.length > 250 && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '40px',
+                      background: 'linear-gradient(transparent, var(--bg-app))',
+                      pointerEvents: 'none',
+                    }} />
+                  )}
+                </div>
+              </div>
+
+              {/* 4. Recommendation & Evidence Side-by-Side */}
+              <div className="grid-2-col mb-5">
+                {/* Recommendation */}
+                <div style={{ padding: '0.9rem 1.1rem', background: 'var(--bg-app)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary)', marginBottom: '0.3rem' }}>
+                    Proposed Recommendation
+                  </div>
+                  <p style={{ fontSize: '0.88rem', color: 'var(--text-primary)', lineHeight: 1.55 }}>
+                    {review.original_recommendation}
                   </p>
                 </div>
 
-                <div className="form-group mb-4">
-                  <label htmlFor={`decision-${review.id}`} className="form-label">
-                    Final Decision Note
-                    <span className="text-muted text-xs" style={{ marginLeft: 8 }}>(optional)</span>
-                  </label>
-                  <input
-                    id={`decision-${review.id}`}
-                    type="text"
-                    className="form-control"
-                    value={state.finalDecision || ''}
-                    onChange={e => updateAction(review.id, 'finalDecision', e.target.value)}
-                    placeholder="E.g. 'Schedule a support session.' or 'No action needed.'"
-                  />
-                </div>
-
-                {state.error && (
-                  <div className="error-msg mb-3" role="alert">⚠ {state.error}</div>
-                )}
-
-                <div className="flex gap-3 flex-wrap items-center">
-                  <button
-                    className="btn btn-success"
-                    onClick={() => handleAction(review.id, 'approved')}
-                    disabled={state.loading}
-                    aria-label={`Approve recommendation for ${review.student_name}`}
-                  >
-                    ✓ Approve
-                  </button>
-                  <button
-                    className="btn btn-warn"
-                    onClick={() => handleAction(review.id, 'modified')}
-                    disabled={state.loading}
-                    aria-label={`Modify recommendation for ${review.student_name}`}
-                  >
-                    ✏️ Modify
-                  </button>
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => handleAction(review.id, 'rejected')}
-                    disabled={state.loading}
-                    aria-label={`Reject recommendation for ${review.student_name}`}
-                  >
-                    ✕ Reject
-                  </button>
-                  {state.loading && (
-                    <div className="spinner" aria-label="Processing review action…" />
+                {/* Evidence */}
+                <div style={{ padding: '0.9rem 1.1rem', background: 'var(--bg-app)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                    Evidence from Submission
+                  </div>
+                  {review.evidence ? (
+                    <div className="evidence-text" style={{ margin: 0, fontSize: '0.84rem' }}>
+                      "{review.evidence}"
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                      No isolated text passage — rule evaluated overall draft context.
+                    </div>
                   )}
                 </div>
               </div>
-            )}
-          </article>
+
+              {/* 5. Rule Explainability Panel */}
+              <div className="mb-5">
+                <RulePanel
+                  ruleId={review.rule_id}
+                  evidence={review.evidence}
+                  submissionContent={review.submission_content}
+                  submissionScore={review.submission_score}
+                />
+              </div>
+
+              {/* 6. Rule Confidence Meter */}
+              <div style={{ padding: '0.85rem 1rem', background: 'var(--bg-app)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
+                    Rule Confidence
+                  </div>
+                  <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)' }}>
+                    {review.confidence != null ? `${(review.confidence * 100).toFixed(0)}%` : '—'}
+                  </div>
+                </div>
+
+                {review.confidence != null && (
+                  <div className="progress-bar" style={{ marginTop: '0.4rem', height: '6px' }}>
+                    <div 
+                      className="progress-fill" 
+                      style={{ 
+                        width: `${review.confidence * 100}%`,
+                        background: review.confidence < 0.5 ? 'var(--warning)' : 'var(--primary)'
+                      }} 
+                    />
+                  </div>
+                )}
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+                  Rule confidence indicates pattern match certainty, not the student's quality or grade.
+                </div>
+              </div>
+
+              {/* 7. Action Controls (If Pending) OR Audit Decision (If Actioned) */}
+              {isPending ? (
+                <div style={{ paddingTop: '1.25rem', borderTop: '1px solid var(--border-light)' }}>
+                  <div className="form-group mb-3">
+                    <label htmlFor={`reason-${review.id}`} className="form-label">
+                      Override Reason
+                      <span style={{ fontSize: '0.75rem', color: 'var(--danger)', marginLeft: '0.4rem' }}>
+                        (Required if Rejecting or Modifying)
+                      </span>
+                    </label>
+                    <textarea
+                      id={`reason-${review.id}`}
+                      className="form-control"
+                      rows={2}
+                      value={state.reason || ''}
+                      onChange={e => updateAction(review.id, 'reason', e.target.value)}
+                      placeholder="Explain pedagogical rationale for overriding this automated suggestion…"
+                    />
+                    <p className="form-hint">Logged permanently into the audit trail for accreditation compliance.</p>
+                  </div>
+
+                  <div className="form-group mb-4">
+                    <label htmlFor={`decision-${review.id}`} className="form-label">
+                      Instructor Decision Note <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(Optional)</span>
+                    </label>
+                    <input
+                      id={`decision-${review.id}`}
+                      type="text"
+                      className="form-control"
+                      value={state.finalDecision || ''}
+                      onChange={e => updateAction(review.id, 'finalDecision', e.target.value)}
+                      placeholder="e.g., 'Advised student to incorporate AWS Lambda use case during office hours'"
+                    />
+                  </div>
+
+                  {state.error && (
+                    <div className="error-msg mb-3" role="alert">⚠️ {state.error}</div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button
+                      type="button"
+                      className="btn btn-success"
+                      onClick={() => handleAction(review.id, 'approved')}
+                      disabled={state.loading}
+                    >
+                      ✓ Approve Recommendation
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => handleAction(review.id, 'modified')}
+                      disabled={state.loading}
+                    >
+                      ✏️ Modify Recommendation
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}
+                      onClick={() => handleAction(review.id, 'rejected')}
+                      disabled={state.loading}
+                    >
+                      ✕ Reject Recommendation
+                    </button>
+                    {state.loading && (
+                      <div className="spinner" aria-label="Processing action…" />
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border-light)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
+                      Moderation Audit Record
+                    </span>
+                    <StatusBadge status={review.status} label={review.status} size="sm" />
+                  </div>
+
+                  {review.override_reason && (
+                    <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', background: 'var(--bg-app)', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+                      <strong>Override Rationale:</strong> {review.override_reason}
+                    </div>
+                  )}
+
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                    Moderated by <strong>{review.reviewer || 'Instructor'}</strong>
+                    {review.reviewed_at && ` on ${new Date(review.reviewed_at).toLocaleString()}`}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         )
       })}
     </div>
