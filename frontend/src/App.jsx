@@ -5,6 +5,7 @@ import { getStudents } from './api/client.js'
 // Navigation & Layout Components
 import Sidebar from './components/Sidebar.jsx'
 import TopHeader from './components/TopHeader.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 
 // Student Workspace Pages
 import StudentDashboard from './pages/StudentDashboard.jsx'
@@ -102,7 +103,10 @@ function ShellLayout() {
         />
 
         <main className="content-container" id="main-content">
-          <Routes>
+          {/* ErrorBoundary catches unhandled render errors in any page component.
+              API/network errors are handled at the page level via .catch() — not here. */}
+          <ErrorBoundary>
+            <Routes>
             <Route path="/" element={<Navigate to="/student" replace />} />
             
             {/* Student Workspace */}
@@ -128,7 +132,8 @@ function ShellLayout() {
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/student" replace />} />
-          </Routes>
+            </Routes>
+          </ErrorBoundary>
         </main>
       </div>
     </div>

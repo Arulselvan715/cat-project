@@ -75,6 +75,6 @@ def root():
 
 
 @app.get("/health")
-@limiter.exempt
+@limiter.exempt  # Exempt from rate limiting — used for monitoring probes and load benchmarks.
 def health():
     return {"status": "ok"}

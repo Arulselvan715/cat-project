@@ -280,12 +280,14 @@ def _count_grammar_issues(text: str) -> Tuple[int, List[str]]:
 # Scoring helpers
 # ---------------------------------------------------------------------------
 
+# Rubric criterion weights — must sum to 1.0.
+# These match the RubricCriterion.criterion_id values in the database.
 WEIGHTS = {
-    "DEF": 0.20,
-    "ADV": 0.30,
-    "EX":  0.30,
-    "ORG": 0.10,
-    "CLR": 0.10,
+    "DEF": 0.20,   # Definition of cloud computing
+    "ADV": 0.30,   # Advantages / benefits
+    "EX":  0.30,   # Real-world examples (named providers or example phrases)
+    "ORG": 0.10,   # Organisation / structure (transitions, paragraphs)
+    "CLR": 0.10,   # Clarity / length / language quality
 }
 
 
@@ -691,8 +693,27 @@ ALL_TEXT_RULES = [
 
 def analyze_submission(text: str) -> EngineOutput:
     """
-    Main entry point.
-    Takes raw submission text, returns EngineOutput with score and feedback.
+    Main engine entry point.
+
+    Execution model (4 steps):
+      1. Compute per-criterion scores (DEF, ADV, EX, ORG, CLR) from keyword/regex detection.
+      2. Apply ALL_TEXT_RULES — each is a pure function that inspects the raw text
+         and returns a FeedbackResult or None.
+      3. Apply score-based high-impact rules (RULE_HI_001 / RULE_HI_002) — these look
+         at the computed total score, not the text.
+      4. Determine the overall requires_human_review flag — True if ANY feedback item
+         sets requires_human_review=True.
+
+    Human-review triggers (any one is sufficient):
+      - Score < 20  (RULE_HI_001)
+      - Score >= 93 (RULE_HI_002)
+      - Plagiarism heuristic signal (RULE_PLAG_001)
+      - Extremely short submission < 10 words (RULE_CLR_001)
+      - Ambiguous example reference (RULE_EX_003)
+
+    Error behavior:
+      - Raises ValueError if text is empty or whitespace-only.
+        The API layer converts this to HTTP 422 or 500 (handled in routers).
     """
     if not text or not text.strip():
         raise ValueError("Submission text cannot be empty.")
