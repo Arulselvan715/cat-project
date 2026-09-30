@@ -1,0 +1,73 @@
+{
+  "benchmark_label": "Simulated Local Concurrency Benchmark \u2014 Not a Production-Scale Load Test",
+  "base_url": "http://localhost:8000",
+  "endpoint": "/health",
+  "timestamp": "2026-09-30T16:51:51.476296+00:00",
+  "results": [
+    {
+      "concurrency": 10,
+      "total_requests": 30,
+      "successful_requests": 30,
+      "failed_requests": 0,
+      "avg_latency_ms": 151.09,
+      "median_latency_ms": 60.32,
+      "p95_latency_ms": 356.52,
+      "p99_latency_ms": 358.03,
+      "min_latency_ms": 21.83,
+      "max_latency_ms": 358.03,
+      "total_elapsed_s": 0.517,
+      "throughput_rps": 58.08,
+      "error_rate_pct": 0.0,
+      "errors": []
+    },
+    {
+      "concurrency": 25,
+      "total_requests": 75,
+      "successful_requests": 75,
+      "failed_requests": 0,
+      "avg_latency_ms": 247.09,
+      "median_latency_ms": 206.57,
+      "p95_latency_ms": 446.14,
+      "p99_latency_ms": 453.86,
+      "min_latency_ms": 49.79,
+      "max_latency_ms": 453.86,
+      "total_elapsed_s": 0.886,
+      "throughput_rps": 84.66,
+      "error_rate_pct": 0.0,
+      "errors": []
+    },
+    {
+      "concurrency": 50,
+      "total_requests": 150,
+      "successful_requests": 150,
+      "failed_requests": 0,
+      "avg_latency_ms": 732.3,
+      "median_latency_ms": 609.65,
+      "p95_latency_ms": 1680.38,
+      "p99_latency_ms": 1946.47,
+      "min_latency_ms": 171.05,
+      "max_latency_ms": 1982.33,
+      "total_elapsed_s": 2.619,
+      "throughput_rps": 57.27,
+      "error_rate_pct": 0.0,
+      "errors": []
+    },
+    {
+      "concurrency": 100,
+      "total_requests": 300,
+      "successful_requests": 300,
+      "failed_requests": 0,
+      "avg_latency_ms": 2034.19,
+      "median_latency_ms": 1208.57,
+      "p95_latency_ms": 5258.97,
+      "p99_latency_ms": 5685.68,
+      "min_latency_ms": 66.89,
+      "max_latency_ms": 5810.15,
+      "total_elapsed_s": 6.767,
+      "throughput_rps": 44.33,
+      "error_rate_pct": 0.0,
+      "errors": []
+    }
+  ],
+  "error": null
+}

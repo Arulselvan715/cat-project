@@ -198,6 +198,19 @@ export default function Sidebar({ isOpen, onClose, currentRole, onRoleChange, st
             <span className="nav-label">Human Validation</span>
           </NavLink>
 
+          <NavLink 
+            to="/mentor/stress" 
+            className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+          >
+            <span className="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </span>
+            <span className="nav-label">Stress &amp; Robustness</span>
+          </NavLink>
+
           <div className="nav-group-label" style={{ marginTop: '1.25rem' }}>SYSTEM</div>
           
           <NavLink 

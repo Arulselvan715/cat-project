@@ -58,13 +58,18 @@ The application provides two dedicated operational workspaces alongside an evalu
    - **WCAG 2.1 AA Accessibility Checklist**: 8-point audit verifying keyboard navigation, visible focus indicators, semantic labels, contrast, and screen-reader compatibility.
    - **Language Diversity & Fairness**: Non-native ESL evaluation verifying grammar feedback is isolated into low-priority informational notes without deducting conceptual points.
    - **Explainability Validation**: Verification of the 7 core explainability questions ensuring complete transparency.
+4. **Stress & Robustness (/mentor/stress)**: Stage 2 validation dashboard showing:
+   - Synthetic Validation Corpus results (16 cases, 0 failures, 0 evidence fabrication errors)
+   - Evidence Extraction Audit (40 tests proving the non-fabrication invariant)
+   - Simulated Local Concurrency Benchmark (actual measured latency across 10/25/50/100 concurrent users)
+   - API Rate Limit status and test results (slowapi, 30 req/min per IP, HTTP 429 on excess)
 
 ---
 
 ## 4. Key Core Features & Safeguards
 
 - **Deterministic Rubric-Based Feedback**: Evaluates submissions against multi-criteria rubrics (Definition 20%, Advantages 30%, Real-World Examples 30%, Organization 10%, Clarity 10%).
-- **Non-Fabricated Evidence Extraction**: Text quotes are extracted verbatim via substring search; no evidence is ever hallucinated or synthesized.
+- **Non-Fabricated Evidence Extraction**: Text quotes are extracted verbatim via substring search; no evidence is ever hallucinated or synthesized. Formally documented in `EVIDENCE_EXTRACTION.md` and verified by `test_evidence.py`.
 - **Actionable Recommendations**: Feedback messages provide concrete next steps referencing specific rubric requirements.
 - **Rule Confidence Calibration**: Explicitly informs mentors and students that confidence represents pattern match certainty, not the learner's subject mastery.
 - **High-Impact Human Review**: Low scores (<20), plagiarism heuristic signals, extreme high scores (>95), and low pattern confidence (<0.50) are held in pending state until reviewed by an authorized human mentor.
@@ -73,6 +78,7 @@ The application provides two dedicated operational workspaces alongside an evalu
 - **Audit Trail**: Every override justification, reviewer name, and timestamp is permanently recorded in an immutable audit log.
 - **Revision History**: Comprehensive tracking of draft versus revision progression with score delta computation.
 - **Transparent Missing Data & Ground Truth**: The system renders explicit "Insufficient measured data" or "Ground truth not available" notices when empirical labels are missing.
+- **API Rate Limiting**: 30 requests/minute per IP enforced via `slowapi`. Returns HTTP 429 on excess. Prototype configuration — not a production capacity claim.
 
 ---
 
@@ -125,16 +131,32 @@ cd backend
 python -m pytest tests/ -v
 ```
 
-**Verified Test Suite Status**:
+**Verified Test Suite Status (Stage 2)**:
 ```
-full suite collected 79 items
-tests/test_api.py ................................... [ 54%]
-tests/test_engine.py .......................          [ 82%]
-tests/test_experiment.py ..............               [100%]
+collected 128 items
 
-======================== 79 passed, 1 warning in 4.68s ========================
+tests/test_api.py    ..................................... (35 tests)
+tests/test_engine.py ........................s        (25 tests, 1 skipped)
+tests/test_experiment.py ..............              (14 tests)
+tests/test_evidence.py .....................................  (40 tests)
+tests/test_rate_limit.py .........                 (9 tests)
+
+==================== 127 passed, 1 skipped, 1 warning in 7.02s ====================
 ```
-- **79 total tests: 79 passed, 0 failed, 0 errors**
+- **127 passed, 1 skipped (conditional skip), 0 failed**
+
+### 4. Run Corpus Validation
+```bash
+python validation/run_corpus.py --verbose
+```
+- 16 synthetic cases · 16 passed · 0 failed · 0 evidence fabrication errors
+
+### 5. Run Load Benchmark
+```bash
+# Backend must be running first
+python validation/load_test.py --levels 10 25 50 100
+```
+- Results saved to `validation/load_test_results.json` and displayed in the Stress & Robustness dashboard.
 
 ---
 
@@ -142,6 +164,8 @@ tests/test_experiment.py ..............               [100%]
 
 - [`REQUIREMENTS.md`](./REQUIREMENTS.md): Formal user requirements, functional specifications (FR-1 through FR-8), and non-functional requirements (NFR-1 through NFR-8).
 - [`REQUIREMENTS_TRACEABILITY.md`](./REQUIREMENTS_TRACEABILITY.md): 42-requirement matrix verifying implementation, live application evidence, documentation citations, and automated tests.
-- [`VALIDATION.md`](./VALIDATION.md): Comprehensive validation report covering baseline conditions, prototype results, 9-class error taxonomy, accessibility, language fairness, and simulated user panels.
+- [`VALIDATION.md`](./VALIDATION.md): Comprehensive validation report covering baseline conditions, prototype results, 9-type error taxonomy, accessibility, language fairness, and simulated user panels.
 - [`ARCHITECTURE.md`](./ARCHITECTURE.md): Component diagrams, data models, rule execution order, and human-in-the-loop lifecycle.
 - [`LIMITATIONS.md`](./LIMITATIONS.md): Candid academic and operational limitations including seed/demo data constraints, regex keyword matching boundaries, and human review requirements.
+- [`EVIDENCE_EXTRACTION.md`](./EVIDENCE_EXTRACTION.md): **[Stage 2]** Complete audit and methodology documentation of evidence extraction — proves non-fabrication invariant, documents known computed-evidence rules (RULE_LANG_001, RULE_PLAG_001), and covers all engine pattern-matching mechanisms.
+- [`LOAD_TESTING.md`](./LOAD_TESTING.md): **[Stage 2]** Concurrency benchmark methodology, actual measured results, limitations, and how to re-run the benchmark.

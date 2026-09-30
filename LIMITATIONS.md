@@ -67,3 +67,16 @@ The prototype uses persona dropdown switches for rapid demonstration across stud
 | An explainable assistant with non-fabricated evidence | An ungrounded generative black-box |
 | A triage workflow empowering human instructors | An autonomous replacement for educator judgment |
 | A functional prototype verified against 42 requirements | A completed multi-institution clinical trial |
+
+---
+
+## 6. Stage 2 Limitations
+
+### L-S2-1: Rate Limit Is a Prototype Configuration
+The 30 requests/minute per IP rate limit is a conservative engineering default for a single-server prototype. It does not represent a validated production capacity requirement and may need to be adjusted based on actual user load profiling.
+
+### L-S2-2: Load Benchmark Is Local Only
+The concurrency benchmark (`validation/load_test.py`) runs on a single Windows development machine with one Uvicorn worker. Results are not representative of production performance. See `LOAD_TESTING.md` for full limitations.
+
+### L-S2-3: Corpus Is Fully Synthetic
+All 16 corpus cases are purpose-built synthetic submissions. No real students participated. Corpus results cannot be interpreted as evidence of real-world generalization without additional empirical testing.

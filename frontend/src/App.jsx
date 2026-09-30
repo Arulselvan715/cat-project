@@ -21,6 +21,7 @@ import MetricsPage from './pages/MetricsPage.jsx'
 import ExperimentDashboard from './pages/ExperimentDashboard.jsx'
 import ErrorAnalysisPage from './pages/ErrorAnalysisPage.jsx'
 import ValidationPage from './pages/ValidationPage.jsx'
+import StressTestPage from './pages/StressTestPage.jsx'
 
 // System Pages
 import SettingsPage from './pages/SettingsPage.jsx'
@@ -70,6 +71,7 @@ function ShellLayout() {
     if (p === '/mentor/experiment') return { title: 'A/B Experimentation & Efficacy', subtitle: 'Controlled baseline vs assistant trial' }
     if (p === '/mentor/errors') return { title: 'Error Analysis & Taxonomy', subtitle: 'Systematic failure tracking and accuracy auditing' }
     if (p === '/mentor/validation') return { title: 'Human Validation & Usability', subtitle: 'Task success, WCAG accessibility, and explainability' }
+    if (p === '/mentor/stress') return { title: 'Stress & Robustness Dashboard', subtitle: 'Corpus validation, evidence audit, concurrency benchmark, rate limiting' }
     if (p === '/settings') return { title: 'System Settings', subtitle: 'Configuration and accessibility preferences' }
     if (p === '/help') return { title: 'Architecture & Documentation', subtitle: 'Formative feedback workflow guidelines' }
     return { title: 'Formative Feedback Assistant', subtitle: 'Human-centered learning scaffolding' }
@@ -118,6 +120,7 @@ function ShellLayout() {
             <Route path="/mentor/experiment" element={<ExperimentDashboard />} />
             <Route path="/mentor/errors" element={<ErrorAnalysisPage />} />
             <Route path="/mentor/validation" element={<ValidationPage />} />
+            <Route path="/mentor/stress" element={<StressTestPage />} />
 
             {/* System */}
             <Route path="/settings" element={<SettingsPage />} />
